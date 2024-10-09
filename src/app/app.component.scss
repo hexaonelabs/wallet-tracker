@@ -1,0 +1,11 @@
+:host {
+
+  ion-list.resume ion-label {
+    font-weight: bolder;
+}
+ion-item, ion-list {
+  background: transparent!important;
+  --background: transparent!important;
+  // --border-color: red!important;
+}
+}
