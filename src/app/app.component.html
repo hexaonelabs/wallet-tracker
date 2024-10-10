@@ -1,6 +1,7 @@
 <ion-app>
   <ion-content>
     <ion-grid *ngIf="user$ | async as user; else authTemplate" fixed>
+      
       <ion-row class="ion-padding ion-align-items-center">
         <ion-col>
           <h1>
@@ -14,6 +15,9 @@
           </p>
         </ion-col>
         <ion-col size="auto">
+          <ion-button (click)="backup()" fill="clear"> 
+            <ion-icon name="download-outline"></ion-icon>
+          </ion-button>
           <ion-button (click)="logout()"> Logout </ion-button>
         </ion-col>
       </ion-row>

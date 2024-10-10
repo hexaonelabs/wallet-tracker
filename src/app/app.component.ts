@@ -36,6 +36,7 @@ import {
   IonCardHeader,
   IonCardSubtitle,
   IonCardTitle,
+  IonIcon,
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { filter, firstValueFrom, map, Observable, switchMap, tap } from 'rxjs';
@@ -60,6 +61,13 @@ import {
   getTotalWalletWorth,
   groupByTicker,
 } from './app.utils';
+import {
+  downloadOutline,
+  closeOutline,
+  addOutline,
+  trashOutline,
+} from 'ionicons/icons';
+import { addIcons } from 'ionicons';
 
 const UIElements = [
   IonApp,
@@ -87,6 +95,7 @@ const UIElements = [
   IonCardHeader,
   IonCardTitle,
   IonCardSubtitle,
+  IonIcon,
 ];
 
 @Component({
@@ -138,6 +147,12 @@ export class AppComponent {
     private readonly _modalCtrl: ModalController,
     private readonly _coinsService: CoinsService
   ) {
+    addIcons({
+      downloadOutline,
+      closeOutline,
+      addOutline,
+      trashOutline,
+    });
     this._auth.onAuthStateChanged((user) => {
       if (user) {
         console.log('User is logged in');
@@ -156,7 +171,10 @@ export class AppComponent {
       // convert object to array
       map((assetPositions) => Object.values(assetPositions)),
       // get the current price and 24h change; calculate total, average cost, pl dollars and pl percentage
-      switchMap(addMarketDatas),
+      switchMap(
+        async (assetPositions) =>
+          await addMarketDatas(assetPositions, { _coinsService, _db })
+      ),
       // sort by total
       map((assetPositions) =>
         [...assetPositions].sort((a, b) => b.total - a.total)
@@ -255,5 +273,29 @@ export class AppComponent {
   async selectNetwork(networkId: string) {
     this.txForm.patchValue({ networkId });
     this.openSelectNetwork = false;
+  }
+
+  async backup() {
+    console.log('backup');
+    const txs = await firstValueFrom(this.txs$);
+    const userWallets = await firstValueFrom(this.userWallets$);
+    const defiProtocols = await firstValueFrom(this._db.defiProtocols$);
+    console.log(txs, userWallets, defiProtocols);
+
+    const data = {
+      txs,
+      userWallets,
+      defiProtocols,
+    };
+    const blob = new Blob([JSON.stringify(data)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `backup-database-${new Date()
+      .toISOString()
+      .replace(/ /g, '_')}.json`;
+    a.click();
   }
 }
