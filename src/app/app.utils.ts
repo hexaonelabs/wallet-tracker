@@ -1,4 +1,3 @@
-import { inject } from '@angular/core';
 import { AssetPosition, Tx } from './interfaces';
 import { CoinsService } from './services/coins/coins.service';
 import { AveragePipe } from './pipes/average/average.pipe';
@@ -25,9 +24,16 @@ export const groupByTicker = (txs: Tx[]) => {
   }, {} as Record<string, AssetPosition>);
 };
 
-export const addMarketDatas = async (assetPositions: AssetPosition[]) => {
-  const _coinsService = inject(CoinsService);
-  const _db = inject(DBService);
+export const addMarketDatas = async (
+  assetPositions: AssetPosition[],
+  {
+    _coinsService,
+    _db,
+  }: {
+    _coinsService: CoinsService;
+    _db: DBService;
+  }
+) => {
   const tickerIds = assetPositions.map((asset) => asset.tickerId);
   const coinsList = await _coinsService.getAllCoinsId();
   const coinTickerIds = tickerIds
