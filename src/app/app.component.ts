@@ -39,7 +39,16 @@ import {
   IonIcon,
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
-import { filter, firstValueFrom, map, Observable, switchMap, tap } from 'rxjs';
+import {
+  BehaviorSubject,
+  combineLatest,
+  filter,
+  firstValueFrom,
+  map,
+  Observable,
+  switchMap,
+  tap,
+} from 'rxjs';
 import { AssetPosition, Tx, UserWallet } from './interfaces';
 import {
   FormControl,
@@ -139,6 +148,9 @@ export class AppComponent {
   public openSelectTicker: boolean = false;
   public filteredTickers: any[] = [];
   public openSelectWallet: boolean = false;
+  private readonly _walletFilterValue$ = new BehaviorSubject<
+    string | undefined
+  >(undefined);
   public openSelectNetwork: boolean = false;
 
   constructor(
@@ -153,6 +165,10 @@ export class AppComponent {
       addOutline,
       trashOutline,
     });
+
+    // manage user authentication state changes
+    // to load user data when user is logged in
+    // and clear user data when user is logged out
     this._auth.onAuthStateChanged((user) => {
       if (user) {
         console.log('User is logged in');
@@ -162,8 +178,35 @@ export class AppComponent {
         this._db.clearData();
       }
     });
+
+    // connect user Observable
     this.user$ = authState(this._auth);
-    this.userWallets$ = this._db.userWallets$;
+    // build userWallets Observable using
+    // `_walletFilterValue$` to filter the wallets
+
+    this.userWallets$ = combineLatest([
+      this._db.userWallets$,
+      this._walletFilterValue$.asObservable(),
+    ]).pipe(
+      map(([wallets, filterBy]) =>
+        // filter wallets by name if filterBy is set
+        // and has more than 2 characters
+        // otherwise return all wallets
+        filterBy && filterBy.length > 2
+          ? wallets.filter((wallet) =>
+              wallet.name
+                .toLocaleLowerCase()
+                .includes(filterBy.toLocaleLowerCase() ?? '')
+            )
+          : wallets
+      )
+    );
+
+    // build txs Observable using `_db.txs$`
+    // and add market data to each tx
+    // and calculate total wallet worth and total stale worth
+    // and total pl dollars and total pl percentage
+    // and sort by total position worth
     this.txs$ = this._db.txs$.pipe(
       filter((txs) => !!txs),
       // group txs by ticker id and sum the quantity
@@ -258,6 +301,15 @@ export class AppComponent {
       // add limit to 10
       .slice(0, 10);
     this.networks = filteredNetworks;
+  }
+
+  async searchWallet(search: string) {
+    console.log(search);
+    if (search.length < 2) {
+      this._walletFilterValue$.next(undefined);
+      return;
+    }
+    this._walletFilterValue$.next(search);
   }
 
   async selectTicker(tickerId: string) {
