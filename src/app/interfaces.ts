@@ -17,8 +17,7 @@ export interface UserWallet {
   id: string;
   name: string;
   address?: string;
-  networkId: string;
-  createdAt: Date;
+  createdAt?: Date;
   uid: string;
 }
 
