@@ -1,4 +1,4 @@
-import { Injectable, isDevMode } from '@angular/core';
+import { Injectable } from '@angular/core';
 import {
   collection,
   Firestore,
@@ -10,10 +10,10 @@ import {
   doc,
   deleteDoc,
   QueryConstraint,
+  collectionData,
 } from '@angular/fire/firestore';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { Tx, UserWallet } from '../../interfaces';
-import { limit } from 'firebase/firestore';
 
 @Injectable({
   providedIn: 'root',
@@ -57,12 +57,22 @@ export class DBService {
 
   async addTx(tx: Omit<Tx, 'id'>) {
     const colRef = collection(this._firestore, this._COLLECTIONS.tx);
-    await addDoc(colRef, tx);
+    const result = await addDoc(colRef, tx);
+    // add new Tx to the list
+    const currentTxs = this._txs$.value;
+    this._txs$.next([...currentTxs, { ...tx, id: result.id }]);
   }
 
   async delete(id: string) {
     const docRef = doc(this._firestore, this._COLLECTIONS.tx, id);
     await deleteDoc(docRef);
+    // update the list
+    const currentTxs = this._txs$.value;
+    const index = currentTxs.findIndex((tx) => tx.id === id);
+    if (index !== -1) {
+      currentTxs.splice(index, 1);
+      this._txs$.next(currentTxs);
+    }
   }
 
   private async _loadTxs(uid: string) {
@@ -75,49 +85,55 @@ export class DBService {
     const colRef = collection(this._firestore, this._COLLECTIONS.tx);
     const constraints = [
       where('uid', '==', uid),
-      isDevMode() ? limit(5) : null,
+      // orderBy('createdAt', 'desc'),
     ].filter(Boolean) as QueryConstraint[];
     const q = query(colRef, ...constraints);
-    const sub = onSnapshot(q, (snapshot) => {
-      const data = snapshot
-        .docChanges()
-        .map((change) => {
-          if (change.type === 'added') {
-            // add to the tx list
-            return [
-              ...this._txs$.value,
-              {
-                ...(change.doc.data() as Tx),
-                id: change.doc.id,
-              },
-            ];
-          } else if (change.type === 'modified') {
-            const index = this._txs$.value.findIndex(
-              (tx) => tx.id === change.doc.id
-            );
-            if (index !== -1) {
-              return [
-                ...this._txs$.value.slice(0, index),
-                {
-                  ...(change.doc.data() as Tx),
-                  id: change.doc.id,
-                },
-                ...this._txs$.value.slice(index + 1),
-              ];
-            }
-          } else if (change.type === 'removed') {
-            return this._txs$.value.filter((tx) => tx.id !== change.doc.id);
-          } else {
-            return [];
-          }
-          return [];
-        })
-        .flat()
-        .filter(Boolean);
-      console.log('tx updated', data);
-      this._txs$.next(data);
-    });
-    this._subscriptions.push({ collection: this._COLLECTIONS.tx, sub });
+    // get data without listener
+    const data = (await firstValueFrom(
+      collectionData(q, { idField: 'id' })
+    )) as Tx[];
+    this._txs$.next(data);
+
+    // const sub = onSnapshot(q, (snapshot) => {
+    //   // console.log('snapshot', snapshot.docs);
+    //   const added = snapshot
+    //     .docChanges()
+    //     .filter((change) => change.type === 'added')
+    //     .map((change) => ({
+    //       ...(change.doc.data() as Tx),
+    //       id: change.doc.id,
+    //     }));
+    //   const modified = snapshot
+    //     .docChanges()
+    //     .filter((change) => change.type === 'modified')
+    //     .map((change) => ({
+    //       ...(change.doc.data() as Tx),
+    //       id: change.doc.id,
+    //     }));
+    //   const removed = snapshot
+    //     .docChanges()
+    //     .filter((change) => change.type === 'removed')
+    //     .map((change) => change.doc.id);
+
+    //   let currentTxs = this._txs$.value;
+
+    //   // Handle added documents
+    //   currentTxs = [...currentTxs, ...added];
+
+    //   // Handle modified documents
+    //   modified.forEach((modifiedTx) => {
+    //     const index = currentTxs.findIndex((tx) => tx.id === modifiedTx.id);
+    //     if (index !== -1) {
+    //       currentTxs[index] = modifiedTx;
+    //     }
+    //   });
+
+    //   // Handle removed documents
+    //   currentTxs = currentTxs.filter((tx) => !removed.includes(tx.id));
+    //   // update the subject
+    //   this._txs$.next(currentTxs);
+    // });
+    // this._subscriptions.push({ collection: this._COLLECTIONS.tx, sub });
   }
 
   private async _loadUserWallets(uid: string) {
