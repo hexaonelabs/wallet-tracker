@@ -133,7 +133,10 @@ export class DBService {
     const constraints = [where('uid', '==', uid)];
     const q = query(colRef, ...constraints);
     const sub = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => doc.data() as UserWallet);
+      const data: UserWallet[] = snapshot.docs.map((doc) => ({
+        ...(doc.data() as Omit<UserWallet, 'id'>),
+        id: doc.id,
+      }));
       this._userWallets$.next(data);
     });
     this._subscriptions.push({ collection: this._COLLECTIONS.userWallet, sub });

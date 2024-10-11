@@ -164,7 +164,7 @@
                   expand="full"
                   type="submit"
                   [disabled]="!txForm.valid"
-                  (click)="addTx()"
+                  (click)="addTx($any($event.target))"
                   >Submit</ion-button
                 >
               </form>
@@ -327,8 +327,8 @@
             (click)="selectWallet(wallet.id)"
           >
             <ion-label>
-              <h2>{{ wallet.name }}</h2>
-              <p>{{ wallet.id }}</p>
+              <h2>{{ wallet.name|| 'no name' }}</h2>
+              <p *ngIf="wallet.address">{{ wallet.address }}</p>
             </ion-label>
           </ion-item>
         </ion-list>

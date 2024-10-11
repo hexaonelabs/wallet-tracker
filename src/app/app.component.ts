@@ -37,6 +37,7 @@ import {
   IonCardSubtitle,
   IonCardTitle,
   IonIcon,
+  ToastController,
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import {
@@ -157,7 +158,8 @@ export class AppComponent {
     private readonly _auth: Auth,
     private readonly _db: DBService,
     private readonly _modalCtrl: ModalController,
-    private readonly _coinsService: CoinsService
+    private readonly _coinsService: CoinsService,
+    private readonly _toastCtrl: ToastController
   ) {
     addIcons({
       downloadOutline,
@@ -245,11 +247,25 @@ export class AppComponent {
     await signOut(this._auth);
   }
 
-  async addTx() {
+  async addTx(button: IonButton | null) {
     const user = await firstValueFrom(this.user$);
     if (!user) {
       throw new Error('User is not logged in');
     }
+    if (!button) {
+      throw new Error('Button is not defined');
+    }
+    if (!this.txForm.valid) {
+      const toast = await this._toastCtrl.create({
+        message: 'Invalid form data. Please fill all required fields',
+        duration: 2000,
+        color: 'danger',
+      });
+      await toast.present();
+      await toast.onDidDismiss();
+      return;
+    }
+    button.disabled = true;
     const total =
       (this.txForm.value.quantity ?? 0) * (this.txForm.value.price ?? 0);
     const tx: Omit<Tx, 'id'> = {
@@ -258,7 +274,19 @@ export class AppComponent {
       uid: user.uid,
       total,
     };
-    await this._db.addTx(tx);
+    await this._db.addTx(tx).catch((err) => {
+      button.disabled = false;
+      throw err;
+    });
+    this.txForm.reset();
+    button.disabled = false;
+    const toast = await this._toastCtrl.create({
+      message: 'Transaction added',
+      duration: 2000,
+      color: 'success',
+    });
+    await toast.present();
+    await toast.onDidDismiss();
   }
 
   async openDetails(tickerId: string) {
