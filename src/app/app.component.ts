@@ -358,7 +358,7 @@ export class AppComponent {
 
   async backup() {
     console.log('backup');
-    const txs = await firstValueFrom(this.txs$);
+    const txs = await firstValueFrom(this._db.txs$);
     const userWallets = await firstValueFrom(this.userWallets$);
     const defiProtocols = await firstValueFrom(this._db.defiProtocols$);
     console.log(txs, userWallets, defiProtocols);
