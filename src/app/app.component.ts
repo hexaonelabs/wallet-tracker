@@ -38,6 +38,7 @@ import {
   IonCardTitle,
   IonIcon,
   ToastController,
+  IonAvatar,
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import {
@@ -82,6 +83,7 @@ import { addIcons } from 'ionicons';
 const UIElements = [
   IonApp,
   IonContent,
+  IonAvatar,
   IonGrid,
   IonRow,
   IonCol,

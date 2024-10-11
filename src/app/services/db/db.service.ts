@@ -85,6 +85,7 @@ export class DBService {
     const colRef = collection(this._firestore, this._COLLECTIONS.tx);
     const constraints = [
       where('uid', '==', uid),
+      // limit(5),
       // orderBy('createdAt', 'desc'),
     ].filter(Boolean) as QueryConstraint[];
     const q = query(colRef, ...constraints);

@@ -187,12 +187,11 @@
         </ion-col>
       </ion-row>
 
-      <ion-row class="ion-margin-horizontal ion-padding-horizontal ion-margin-top ion-padding-top">
+      <ion-row class="header-table ion-margin-top ion-padding-top ion-align-items-center">
         <ion-col size="2"> Ticker </ion-col>
-        <ion-col size="1" class="ion-text-end"> Units </ion-col>
         <ion-col size="2" class="ion-text-end"> 24h Change </ion-col>
-        <ion-col size="2" class="ion-text-end"> Total </ion-col>
-        <ion-col size="1" class="ion-text-end"> Average Cost </ion-col>
+        <ion-col size="2" class="ion-text-end"> Total<br/><small>Units</small> </ion-col>
+        <ion-col size="2" class="ion-text-end"> Average Cost </ion-col>
         <ion-col size="2" class="ion-text-end"> P/L </ion-col>
         <ion-col size="2" class="ion-text-end"> Wallet % </ion-col>
       </ion-row>
@@ -204,8 +203,17 @@
               <ion-list>
                 <ion-item
                   *ngFor="let tx of txs$ | async"
+                  button
+                  [detail]="false"
                   (click)="openDetails(tx.tickerId)"
                 >
+                  <ion-avatar slot="start">
+                    <img
+                      [src]="tx.logo"
+                      title="{{tx.tickerId}}"
+                      alt="{{tx.tickerId}}"
+                    />
+                  </ion-avatar>
                   <ion-grid>
                     <ion-row class="ion-align-items-center">
                       <ion-col size="2">
@@ -217,9 +225,6 @@
                             }}
                           </p>
                         </ion-label>
-                      </ion-col>
-                      <ion-col size="1" class="ion-text-end">
-                        {{ tx.units | number : "1.2-2" }}
                       </ion-col>
                       <ion-col size="2" class="ion-text-end">
                         <ion-text
@@ -235,9 +240,12 @@
                               | totalPosition
                               | currency : "USD" : "symbol" : "1.2-2"
                           }}
-                        </b>
+                        </b><br />
+                        <small>
+                          {{ tx.units | number : "1.2-2" }} x
+                        </small>
                       </ion-col>
-                      <ion-col size="1" class="ion-text-end">
+                      <ion-col size="2" class="ion-text-end">
                         {{
                           tx.averageCost | currency : "USD" : "symbol" : "1.2-2"
                         }}

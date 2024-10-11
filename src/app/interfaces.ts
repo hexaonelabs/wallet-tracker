@@ -34,4 +34,5 @@ export interface AssetPosition {
   averageCost: number;
   plDollars: number;
   plPercentage: number;
+  logo?: string;
 }
