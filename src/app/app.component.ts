@@ -171,9 +171,10 @@ export class AppComponent {
       // convert object to array
       map((assetPositions) => Object.values(assetPositions)),
       // get the current price and 24h change; calculate total, average cost, pl dollars and pl percentage
-      switchMap(
-        async (assetPositions) =>
-          await addMarketDatas(assetPositions, { _coinsService, _db })
+      switchMap(async (assetPositions) =>
+        assetPositions.length > 0
+          ? await addMarketDatas(assetPositions, { _coinsService, _db })
+          : []
       ),
       // sort by total
       map((assetPositions) =>
