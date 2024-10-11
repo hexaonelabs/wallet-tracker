@@ -187,14 +187,14 @@
         </ion-col>
       </ion-row>
 
-      <ion-row class="ion-padding-horizontal ion-margin-top ion-padding-top">
+      <ion-row class="ion-margin-horizontal ion-padding-horizontal ion-margin-top ion-padding-top">
         <ion-col size="2"> Ticker </ion-col>
         <ion-col size="1" class="ion-text-end"> Units </ion-col>
         <ion-col size="2" class="ion-text-end"> 24h Change </ion-col>
         <ion-col size="2" class="ion-text-end"> Total </ion-col>
-        <ion-col size="2" class="ion-text-end"> Average Cost </ion-col>
+        <ion-col size="1" class="ion-text-end"> Average Cost </ion-col>
         <ion-col size="2" class="ion-text-end"> P/L </ion-col>
-        <ion-col size="1" class="ion-text-end"> Wallet % </ion-col>
+        <ion-col size="2" class="ion-text-end"> Wallet % </ion-col>
       </ion-row>
 
       <ion-row>
@@ -237,7 +237,7 @@
                           }}
                         </b>
                       </ion-col>
-                      <ion-col size="2" class="ion-text-end">
+                      <ion-col size="1" class="ion-text-end">
                         {{
                           tx.averageCost | currency : "USD" : "symbol" : "1.2-2"
                         }}
@@ -252,10 +252,12 @@
                             tx.plDollars
                               | currency : "USD" : "symbol" : "1.2-2"
                           }}<br />
-                          <small> {{ tx.plPercentage }}% </small>
+                          <small> {{ 
+                            tx.plPercentage
+                            | number : "1.2-2" || 0 }}% </small>
                         </ion-text>
                       </ion-col>
-                      <ion-col size="1" class="ion-text-end">
+                      <ion-col size="2" class="ion-text-end">
                         <b>
                           {{
                             tx

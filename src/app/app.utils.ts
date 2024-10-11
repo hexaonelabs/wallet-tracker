@@ -3,6 +3,7 @@ import { CoinsService } from './services/coins/coins.service';
 import { AveragePipe } from './pipes/average/average.pipe';
 import { PLPipe } from './pipes/pl/pl.pipe';
 import { DBService } from './services/db/db.service';
+import { CalculPercentPipe } from './pipes/calcul-percent/calcul-percent.pipe';
 
 export const groupByTicker = (txs: Tx[]) => {
   return txs.reduce((acc, tx) => {
@@ -63,7 +64,12 @@ export const addMarketDatas = async (
       asset.total = asset.price * asset.units;
       asset.averageCost = await new AveragePipe(_db).transform(asset);
       asset.plDollars = await new PLPipe(_db).transform(asset);
-      // asset.plPercentage = await new TotalPercentPipe().transform(asset, this.totalWalletWorth);
+
+      const initialInverstmentWorth = asset.averageCost * asset.units;
+      asset.plPercentage = new CalculPercentPipe().transform(
+        asset.plDollars,
+        initialInverstmentWorth
+      );
     }
   }
   return assetPositions;
