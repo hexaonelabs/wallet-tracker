@@ -234,7 +234,7 @@ export class AppComponent {
         (assetPositions) =>
           (this.totalStaleWorth = getTotalStableWorth(assetPositions))
       ),
-      tap((assetPositions) => getTotaltPL(assetPositions))
+      tap((assetPositions) => (this.totalPL = getTotaltPL(assetPositions)))
     );
   }
 

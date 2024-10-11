@@ -37,7 +37,7 @@
                     <ion-list lines="none" class="resume">
                       <ion-item>
                         <ion-label> Total </ion-label>
-                        <ion-label slot="end">
+                        <ion-label slot="end" class="ion-text-end">
                           {{
                             totalWalletWorth
                               | currency : "USD" : "symbol" : "1.2-2"
@@ -46,25 +46,39 @@
                       </ion-item>
                       <ion-item>
                         <ion-label> Stable </ion-label>
-                        <ion-label slot="end">
+                        <ion-label slot="end" class="ion-text-end">
                           {{
                             totalStaleWorth
                               | currency : "USD" : "symbol" : "1.2-2"
-                          }}
+                          }}<br /> 
+                          <small>
+                            {{
+                              (totalStaleWorth
+                                | calculPercent : totalWalletWorth
+                                | number : "1.2-2")||0
+                            }}%
+                          </small>
                         </ion-label>
                       </ion-item>
                       <ion-item>
                         <ion-label> Volatile </ion-label>
-                        <ion-label slot="end">
+                        <ion-label slot="end" class="ion-text-end">
                           {{
                             totalWalletWorth - totalStaleWorth
                               | currency : "USD" : "symbol" : "1.2-2"
-                          }}
+                          }}<br />
+                          <small>
+                            {{
+                              (totalWalletWorth - totalStaleWorth
+                                | calculPercent : totalWalletWorth
+                                | number : "1.2-2")||0
+                            }}%
+                          </small>
                         </ion-label>
                       </ion-item>
                       <ion-item>
                         <ion-label> Initial bag </ion-label>
-                        <ion-label slot="end">
+                        <ion-label slot="end" class="ion-text-end">
                           {{
                             totalWalletWorth - totalPL
                               | currency : "USD" : "symbol" : "1.2-2"
