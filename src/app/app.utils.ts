@@ -7,9 +7,10 @@ import { CalculPercentPipe } from './pipes/calcul-percent/calcul-percent.pipe';
 
 export const groupByTicker = (txs: Tx[]) => {
   return txs.reduce((acc, tx) => {
-    if (!acc[tx.tickerId]) {
-      acc[tx.tickerId] = {
-        tickerId: tx.tickerId,
+    const tickerId = tx.tickerId.toLocaleUpperCase();
+    if (!acc[tickerId]) {
+      acc[tickerId] = {
+        tickerId,
         units: 0,
         price: 0,
         '24h_change': 0,
@@ -19,7 +20,7 @@ export const groupByTicker = (txs: Tx[]) => {
         plPercentage: 0,
       };
     }
-    const asset = acc[tx.tickerId];
+    const asset = acc[tickerId];
     asset.units += tx.quantity;
     return acc;
   }, {} as Record<string, AssetPosition>);
