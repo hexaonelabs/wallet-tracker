@@ -5,24 +5,27 @@ import { firstValueFrom } from 'rxjs';
 
 @Pipe({
   name: 'average',
-  standalone: true
+  standalone: true,
 })
 export class AveragePipe implements PipeTransform {
-
-  constructor(
-    private readonly _db: DBService
-  ) { }
+  constructor(private readonly _db: DBService) {}
 
   async transform(value: AssetPosition) {
     const txs = await firstValueFrom(this._db.txs$);
-    const filtered = txs.filter(tx => tx.tickerId === value.tickerId);
+    const filtered = txs.filter(
+      (tx) =>
+        tx.tickerId.toLocaleUpperCase() === value.tickerId.toLocaleUpperCase()
+    );
 
     if (!filtered.length) {
       return 0;
     }
 
     // Calculate total cost and total quantity
-    const totalCost = filtered.reduce((sum, tx) => sum + (tx.quantity * tx.price), 0);
+    const totalCost = filtered.reduce(
+      (sum, tx) => sum + tx.quantity * tx.price,
+      0
+    );
     const totalQuantity = filtered.reduce((sum, tx) => sum + tx.quantity, 0);
 
     // Calculate relative average cost
@@ -30,5 +33,4 @@ export class AveragePipe implements PipeTransform {
 
     return relativeAverageCost;
   }
-
 }
