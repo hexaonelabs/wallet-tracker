@@ -53,14 +53,21 @@ export class CoinsService {
     return result;
   }
 
-  async getChainIdList() {
+  async getChainIdList(chainId: string[]) {
     const url = `./datas/chainIds.json`;
     const response = this._http.get<{ [key: string]: string }>(url);
     const result = await firstValueFrom(response);
     // convert to array
-    return Object.entries(result).map(([key, value]) => ({
+    const valueFromList = Object.entries(result).map(([key, value]) => ({
       id: key,
       name: value,
     }));
+    // check if chainId not exist in the list & add it
+    chainId.filter(Boolean).forEach((id) => {
+      if (!valueFromList.find((item) => item.id === id)) {
+        valueFromList.push({ id, name: id });
+      }
+    });
+    return valueFromList;
   }
 }
