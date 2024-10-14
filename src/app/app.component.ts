@@ -323,7 +323,11 @@ export class AppComponent {
     if (search.length < 2) {
       this.networks = [];
     }
-    const networks = await this._coinsService.getChainIdList();
+    const txs = await firstValueFrom(this._db.txs$);
+    const networksFromTxs = txs.map((tx) => tx.networkId);
+    const networks = await this._coinsService.getChainIdList(networksFromTxs);
+    console.log(networks);
+
     const filteredNetworks = networks
       .filter((network: { name: string }) =>
         network.name.toLocaleLowerCase().includes(search.toLocaleLowerCase())
