@@ -90,10 +90,15 @@ export class DBService {
     ].filter(Boolean) as QueryConstraint[];
     const q = query(colRef, ...constraints);
     // get data without listener
-    const data = (await firstValueFrom(
+    const data: any[] = await firstValueFrom(
       collectionData(q, { idField: 'id' })
-    )) as Tx[];
-    this._txs$.next(data);
+    );
+    this._txs$.next([
+      ...data.map((tx) => ({
+        ...tx,
+        createdAt: tx.createdAt?.toDate() || undefined,
+      })),
+    ] as Tx[]);
 
     // const sub = onSnapshot(q, (snapshot) => {
     //   // console.log('snapshot', snapshot.docs);
