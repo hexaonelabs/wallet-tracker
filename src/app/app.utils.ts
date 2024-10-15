@@ -36,17 +36,27 @@ export const addMarketDatas = async (
     _db: DBService;
   }
 ) => {
+  const manualIds = [
+    { tickerId: 'btc', apiId: 'bitcoin' },
+    { tickerId: 'jup', apiId: 'jupiter-exchange-solana' },
+  ];
   const tickerIds = assetPositions.map((asset) => asset.tickerId);
   const coinsList = await _coinsService.getAllCoinsId();
   const coinTickerIds = tickerIds
-    .map((tickerId) =>
-      tickerId.toLocaleLowerCase() === 'btc'
-        ? 'bitcoin'
-        : coinsList.find(
-            (coin: { symbol: string }) =>
-              coin.symbol.toLocaleLowerCase() === tickerId.toLocaleLowerCase()
-          )?.id
-    )
+    .map((tickerId) => {
+      const ticket = manualIds.find(
+        (manualId) =>
+          manualId.tickerId.toLocaleLowerCase() === tickerId.toLocaleLowerCase()
+      );
+      if (ticket) {
+        return ticket.apiId;
+      } else {
+        return coinsList.find(
+          (coin: { symbol: string }) =>
+            coin.symbol.toLocaleLowerCase() === tickerId.toLocaleLowerCase()
+        )?.id;
+      }
+    })
     .filter(Boolean) as string[];
   // replace `btc` tickerId by `bitcoin`
   const index = coinTickerIds.indexOf('btc');
