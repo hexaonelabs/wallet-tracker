@@ -85,7 +85,7 @@ export class DBService {
     const colRef = collection(this._firestore, this._COLLECTIONS.tx);
     const constraints = [
       where('uid', '==', uid),
-      // limit(5),
+      // limit(15),
       // orderBy('createdAt', 'desc'),
     ].filter(Boolean) as QueryConstraint[];
     const q = query(colRef, ...constraints);
@@ -179,7 +179,10 @@ export class DBService {
     ];
     const q = query(colRef, ...constraints);
     const sub = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => doc.data() as any);
+      const data = snapshot.docs.map((doc) => ({
+        ...(doc.data() as Omit<UserWallet, 'id'>),
+        id: doc.id,
+      }));
       this._defiProtocols$.next(data);
     });
     this._subscriptions.push({
