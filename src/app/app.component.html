@@ -1,21 +1,14 @@
 <ion-app>
   <ion-content>
     <ion-grid *ngIf="user$ | async as user; else authTemplate" fixed>
-      
       <ion-row class="ion-padding ion-align-items-center">
         <ion-col>
-          <h1>
-            Hexa Wallets Tracker
-          </h1>
-          <p>
-            Welcome, {{ user.email }}
-          </p>
-          <p>
-
-          </p>
+          <h1>Hexa Wallets Tracker</h1>
+          <p>Welcome, {{ user.email }}</p>
+          <p></p>
         </ion-col>
         <ion-col size="auto">
-          <ion-button (click)="backup()" fill="clear"> 
+          <ion-button (click)="backup()" fill="clear">
             <ion-icon name="download-outline"></ion-icon>
           </ion-button>
           <ion-button (click)="logout()"> Logout </ion-button>
@@ -27,9 +20,7 @@
           <ion-card>
             <ion-card-content>
               <ion-card-title class="ion-padding-start ion-padding-top">
-                <h2>
-                  Overview
-                </h2>
+                <h2>Overview</h2>
               </ion-card-title>
               <ion-grid>
                 <ion-row>
@@ -50,12 +41,12 @@
                           {{
                             totalStaleWorth
                               | currency : "USD" : "symbol" : "1.2-2"
-                          }}<br /> 
+                          }}<br />
                           <small>
                             {{
                               (totalStaleWorth
                                 | calculPercent : totalWalletWorth
-                                | number : "1.2-2")||0
+                                | number : "1.2-2") || 0
                             }}%
                           </small>
                         </ion-label>
@@ -71,7 +62,7 @@
                             {{
                               (totalWalletWorth - totalStaleWorth
                                 | calculPercent : totalWalletWorth
-                                | number : "1.2-2")||0
+                                | number : "1.2-2") || 0
                             }}%
                           </small>
                         </ion-label>
@@ -94,7 +85,7 @@
                             {{
                               (totalPL
                                 | calculPercent : totalWalletWorth - totalPL
-                                | number : "1.2-2")||0
+                                | number : "1.2-2") || 0
                             }}%
                           </small>
                         </ion-label>
@@ -134,7 +125,10 @@
                         </ion-item>
                         <ion-item (click)="openSelectNetwork = true">
                           <ion-label position="stacked">Network</ion-label>
-                          <ion-input [disabled]="true" formControlName="networkId"></ion-input>
+                          <ion-input
+                            [disabled]="true"
+                            formControlName="networkId"
+                          ></ion-input>
                         </ion-item>
                         <ion-item>
                           <ion-label position="stacked">Notes</ion-label>
@@ -179,7 +173,12 @@
                   type="submit"
                   [disabled]="!txForm.valid"
                   (click)="addTx($any($event.target))"
-                  >Submit</ion-button
+                  >Submit
+                  {{
+                    ((txForm.value.price ?? 0) * (txForm.value.quantity ?? 0) +
+                      (txForm.value.fees ?? 0))
+                      | currency : "USD" : "symbol" : "1.2-2"
+                  }}</ion-button
                 >
               </form>
             </ion-card-content>
@@ -187,10 +186,14 @@
         </ion-col>
       </ion-row>
 
-      <ion-row class="header-table ion-margin-top ion-padding-top ion-align-items-center">
+      <ion-row
+        class="header-table ion-margin-top ion-padding-top ion-align-items-center"
+      >
         <ion-col size="2"> Ticker </ion-col>
         <ion-col size="2" class="ion-text-end"> 24h Change </ion-col>
-        <ion-col size="2" class="ion-text-end"> Total<br/><small>Units</small> </ion-col>
+        <ion-col size="2" class="ion-text-end">
+          Total<br /><small>Units</small>
+        </ion-col>
         <ion-col size="2" class="ion-text-end"> Average Cost </ion-col>
         <ion-col size="2" class="ion-text-end"> P/L </ion-col>
         <ion-col size="2" class="ion-text-end"> Wallet % </ion-col>
@@ -210,8 +213,8 @@
                   <ion-avatar slot="start">
                     <img
                       [src]="tx.logo"
-                      title="{{tx.tickerId}}"
-                      alt="{{tx.tickerId}}"
+                      title="{{ tx.tickerId }}"
+                      alt="{{ tx.tickerId }}"
                     />
                   </ion-avatar>
                   <ion-grid>
@@ -239,11 +242,9 @@
                             tx
                               | totalPosition
                               | currency : "USD" : "symbol" : "1.2-2"
-                          }}
-                        </b><br />
-                        <small>
-                          {{ tx.units | number : "1.2-2" }} x
-                        </small>
+                          }} </b
+                        ><br />
+                        <small> {{ tx.units | number : "1.2-2" }} x </small>
                       </ion-col>
                       <ion-col size="2" class="ion-text-end">
                         {{
@@ -260,9 +261,9 @@
                             tx.plDollars
                               | currency : "USD" : "symbol" : "1.2-2"
                           }}<br />
-                          <small> {{ 
-                            tx.plPercentage
-                            | number : "1.2-2" || 0 }}% </small>
+                          <small>
+                            {{ tx.plPercentage | number : "1.2-2" || 0 }}%
+                          </small>
                         </ion-text>
                       </ion-col>
                       <ion-col size="2" class="ion-text-end">
@@ -282,7 +283,6 @@
           </ion-card>
         </ion-col>
       </ion-row>
-
     </ion-grid>
 
     <ng-template #authTemplate fixed>
@@ -351,7 +351,7 @@
             (click)="selectWallet(wallet.id)"
           >
             <ion-label>
-              <h2>{{ wallet.name|| 'no name' }}</h2>
+              <h2>{{ wallet.name || "no name" }}</h2>
               <p *ngIf="wallet.address">{{ wallet.address }}</p>
             </ion-label>
           </ion-item>

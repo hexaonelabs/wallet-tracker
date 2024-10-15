@@ -269,7 +269,8 @@ export class AppComponent {
     }
     button.disabled = true;
     const total =
-      (this.txForm.value.quantity ?? 0) * (this.txForm.value.price ?? 0);
+      (this.txForm.value.quantity ?? 0) * (this.txForm.value.price ?? 0) +
+      (this.txForm.value.fees ?? 0);
     const tx: Omit<Tx, 'id'> = {
       ...(this.txForm.value as any),
       createdAt: new Date(),
@@ -313,7 +314,7 @@ export class AppComponent {
         coin.symbol.toLocaleLowerCase().includes(search.toLocaleLowerCase())
       )
       // add limit to 10
-      .slice(0, 10);
+      .slice(0, 20);
     console.log(filteredCoins);
     this.filteredTickers = filteredCoins;
   }
