@@ -14,6 +14,8 @@ import {
   IonList,
   IonNote,
   IonRow,
+  IonSegment,
+  IonSegmentButton,
   IonSelect,
   IonSelectOption,
   IonText,
@@ -24,12 +26,14 @@ import {
   ToastController,
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { DBService } from '../../services/db/db.service';
 import { Tx } from '../../interfaces';
 import { FilterByTickerPipe } from '../../pipes/filter-by-ticker/filter-by-ticker.pipe';
 import { close, trashOutline } from 'ionicons/icons';
 import { addIcons } from 'ionicons';
+import { ToChainNamePipe } from '../../pipes/to-chain-name/to-chain-name.pipe';
+import { ToDefiProtocolNamePipe } from '../../pipes/to-defiprotocol-name/to-defi-protocol-name.pipe';
 
 const UIElements = [
   IonHeader,
@@ -51,6 +55,8 @@ const UIElements = [
   IonLabel,
   IonTextarea,
   IonNote,
+  IonSegment,
+  IonSegmentButton,
 ];
 
 @Component({
@@ -58,11 +64,19 @@ const UIElements = [
   selector: 'app-tx-detail-list',
   templateUrl: './tx-detail-list.component.html',
   styleUrls: ['./tx-detail-list.component.scss'],
-  imports: [...UIElements, CommonModule, FilterByTickerPipe],
+  imports: [
+    ...UIElements,
+    CommonModule,
+    FilterByTickerPipe,
+    ToChainNamePipe,
+    ToDefiProtocolNamePipe,
+  ],
 })
 export class TxDetailListComponent {
+  public selectedSegment: 'history' | 'location' = 'history';
   @Input() tickerId!: string;
   public readonly txs$: Observable<Tx[]>;
+  public readonly txsLocation$;
 
   constructor(
     private readonly _db: DBService,
@@ -75,6 +89,72 @@ export class TxDetailListComponent {
       trashOutline,
     });
     this.txs$ = this._db.txs$;
+    this.txsLocation$ = this._db.txs$.pipe(
+      map((txs) =>
+        txs.filter(
+          (tx) =>
+            tx.tickerId.toLocaleUpperCase() ===
+            this.tickerId.toLocaleUpperCase()
+        )
+      ),
+      // group tx by network and defiProtocolIds
+      map((txs) => {
+        return txs.reduce(
+          (acc, tx) => {
+            const key = `${tx.networkId}`;
+            if (!acc[key]) {
+              acc[key] = [
+                {
+                  defiProtocolId: tx.defiProtocolId,
+                  networkId: tx.networkId,
+                  tickerId: tx.tickerId.toLocaleUpperCase(),
+                  quantity: tx.quantity,
+                },
+              ];
+            } else {
+              const quantity = acc[key].find(
+                (item) =>
+                  (tx.defiProtocolId
+                    ? item.defiProtocolId === tx.defiProtocolId
+                    : true) &&
+                  item.tickerId.toLocaleUpperCase() ===
+                    tx.tickerId.toLocaleUpperCase()
+              );
+              if (quantity) {
+                quantity.quantity += tx.quantity;
+              } else {
+                acc[key].push({
+                  defiProtocolId: tx.defiProtocolId,
+                  networkId: tx.networkId,
+                  tickerId: tx.tickerId.toLocaleUpperCase(),
+                  quantity: tx.quantity,
+                });
+              }
+            }
+            return acc;
+          },
+          {} as {
+            [key: string]: {
+              defiProtocolId: string;
+              networkId: string;
+              tickerId: string;
+              quantity: number;
+            }[];
+          }
+        );
+      }),
+      map((txs) => {
+        // loop to remove item with quantity >= 0
+        for (const key in txs) {
+          txs[key] = txs[key].filter((tx) => tx.quantity > 0);
+        }
+        return txs;
+      })
+    );
+  }
+
+  segmentChanged($event: CustomEvent) {
+    this.selectedSegment = $event.detail.value as 'history' | 'location';
   }
 
   async deleteTx(txId: string) {

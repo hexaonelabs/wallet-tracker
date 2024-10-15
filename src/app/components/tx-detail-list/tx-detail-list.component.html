@@ -1,6 +1,13 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Transactions History</ion-title>
+    <ion-segment [value]="selectedSegment" (ionChange)="segmentChanged($event)">
+      <ion-segment-button value="history">
+        <ion-label>TXs history</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="location">
+        <ion-label>Asset location</ion-label>
+      </ion-segment-button>
+    </ion-segment>
     <ion-buttons slot="end">
       <ion-button (click)="modalCtrl.dismiss()">
         <ion-icon slot="icon-only" name="close"></ion-icon>
@@ -9,29 +16,59 @@
   </ion-toolbar>
 </ion-header>
 <ion-content>
-  <ion-list>
-    <ion-item *ngFor="let tx of txs$ | async | filterByTicker : tickerId">
-      <ion-label>
-        <h2>{{ tx.tickerId }}</h2>
-        <p>
-          Price: {{ tx.price | currency : "USD" : "symbol" : "1.2-2" }} 
-          <span *ngIf="tx.createdAt">
-            at {{ tx.createdAt | date : "short" }}
-          </span>
-        </p>
-      </ion-label>
-      <ion-note class="ion-margin-horizontal ion-text-end" slot="end">
-        {{ tx.total | currency : "USD" : "symbol" : "1.2-2" }}<br />
-        <small> {{ tx.quantity }}x </small>
-      </ion-note>
-      <ion-button
-        color="danger"
-        fill="outline"
-        slot="end"
-        (click)="deleteTx(tx.id)"
-      >
-        <ion-icon name="trash-outline"></ion-icon>
-      </ion-button>
-    </ion-item>
-  </ion-list>
+  <div [ngSwitch]="selectedSegment">
+    <div *ngSwitchCase="'history'">
+      <ion-list>
+        <ion-item *ngFor="let tx of txs$ | async | filterByTicker : tickerId">
+          <ion-label>
+            <h2>
+              {{ tx.tickerId }} 
+              <small>{{ tx.networkId|toChainName|async }}</small> 
+              <small *ngIf="tx.defiProtocolId">
+                {{ tx.defiProtocolId|toDefiProtocolName|async }}
+              </small>
+            </h2>
+            <p>
+              Price: {{ tx.price | currency : "USD" : "symbol" : "1.2-2" }} 
+              <span *ngIf="tx.createdAt">
+                at {{ tx.createdAt | date : "short" }}
+              </span>
+            </p>
+          </ion-label>
+          <ion-note class="ion-margin-horizontal ion-text-end" slot="end">
+            {{ tx.total | currency : "USD" : "symbol" : "1.2-2" }}<br />
+            <small> {{ tx.quantity }}x </small>
+          </ion-note>
+          <ion-button
+            color="danger"
+            fill="outline"
+            slot="end"
+            (click)="deleteTx(tx.id)"
+          >
+            <ion-icon name="trash-outline"></ion-icon>
+          </ion-button>
+        </ion-item>
+      </ion-list>
+    </div>
+    <div *ngSwitchCase="'location'">
+      <ng-container  *ngIf="txsLocation$ | async as entities">
+        <ion-grid *ngFor="let group of entities| keyvalue">
+          <ion-row *ngFor="let value of group.value">
+            <ion-col size="3">
+              {{ value.tickerId }}
+            </ion-col>
+            <ion-col size="3">
+              {{ value.quantity }}
+            </ion-col>
+            <ion-col size="3">
+              {{ value.networkId|toChainName|async }}
+            </ion-col>
+            <ion-col size="3">
+              {{ value.defiProtocolId ? (value.defiProtocolId|toDefiProtocolName|async) : ''}}
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </ng-container>
+    </div>
+  </div>
 </ion-content>
