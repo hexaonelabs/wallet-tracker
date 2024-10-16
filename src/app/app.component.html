@@ -16,7 +16,7 @@
       </ion-row>
 
       <ion-row>
-        <ion-col size="6">
+        <ion-col size="12" size-md="6">
           <ion-card>
             <ion-card-content>
               <ion-card-title class="ion-padding-start ion-padding-top">
@@ -98,7 +98,7 @@
           </ion-card>
         </ion-col>
 
-        <ion-col size="6">
+        <ion-col size="12" size-md="6">
           <ion-card>
             <ion-card-content>
               <ion-card-title class="ion-padding-start ion-padding-top">
@@ -187,7 +187,7 @@
       </ion-row>
 
       <ion-row
-        class="header-table ion-margin-top ion-padding-top ion-align-items-center"
+        class="header-table ion-margin-top ion-padding-top ion-align-items-center ion-hide-md-down"
       >
         <ion-col size="2"> Ticker </ion-col>
         <ion-col size="2" class="ion-text-end"> 24h Change </ion-col>
@@ -197,6 +197,20 @@
         <ion-col size="2" class="ion-text-end"> Average Cost </ion-col>
         <ion-col size="2" class="ion-text-end"> P/L </ion-col>
         <ion-col size="2" class="ion-text-end"> Wallet % </ion-col>
+      </ion-row>
+      <ion-row
+        class="header-table ion-margin-top ion-padding-top ion-align-items-center ion-hide-md"
+      >
+        <ion-col size="6"> 
+          Ticker<br/>
+          <small>
+            Total
+          </small>
+        </ion-col>
+        <ion-col size="6" class="ion-text-end"> 
+          Wallet %<br/>
+          <small>P/L</small>
+        </ion-col>
       </ion-row>
 
       <ion-row>
@@ -217,7 +231,7 @@
                       alt="{{ tx.tickerId }}"
                     />
                   </ion-avatar>
-                  <ion-grid>
+                  <ion-grid class="ion-hide-md-down">
                     <ion-row class="ion-align-items-center">
                       <ion-col size="2">
                         <ion-label>
@@ -244,7 +258,7 @@
                               | currency : "USD" : "symbol" : "1.2-2"
                           }} </b
                         ><br />
-                        <small> {{ tx.units | number : "1.2-2" }} x </small>
+                        <small> {{ tx.units | number : "1.2-2" }} units</small>
                       </ion-col>
                       <ion-col size="2" class="ion-text-end">
                         {{
@@ -274,6 +288,54 @@
                               | number : "1.2-2"
                           }}%
                         </b>
+                      </ion-col>
+                    </ion-row>
+                  </ion-grid>
+
+                  <ion-grid class="ion-hide-md">
+                    <ion-row class="ion-align-items-center">
+                      <ion-col>
+                        <ion-label>
+                          <h2><b>{{ tx.tickerId }}</b></h2>
+                          <p>
+                            {{
+                              tx.price | currency : "USD" : "symbol" : "1.2-2"
+                            }}
+                          </p>
+                          <p>
+                            <b>
+                              {{
+                                tx
+                                  | totalPosition
+                                  | currency : "USD" : "symbol" : "1.2-2"
+                              }} </b
+                            >
+                          </p>
+                        </ion-label>
+                      </ion-col>
+                      <ion-col class="ion-text-end">
+                        <ion-text>
+                          <b>
+                            {{
+                              tx
+                                | totalPercent : totalWalletWorth
+                                | number : "1.2-2"
+                            }}%
+                          </b>
+                        </ion-text>
+                        <ion-text
+                          [color]="
+                            (tx.plDollars || 0) >= 0 ? 'success' : 'danger'
+                          "
+                        >
+                          {{
+                            tx.plDollars
+                              | currency : "USD" : "symbol" : "1.2-2"
+                          }}<br />
+                          <small>
+                            {{ tx.plPercentage | number : "1.2-2" || 0 }}%
+                          </small>
+                        </ion-text>
                       </ion-col>
                     </ion-row>
                   </ion-grid>
