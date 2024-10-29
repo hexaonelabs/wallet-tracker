@@ -156,7 +156,7 @@
                           <ion-label position="stacked">Fees</ion-label>
                           <ion-input formControlName="fees"></ion-input>
                         </ion-item>
-                        <ion-item>
+                        <ion-item (click)="openSelectDefi = true">
                           <ion-label position="stacked"
                             >DeFi Protocol ID</ion-label
                           >
@@ -405,20 +405,67 @@
       </ion-header>
       <ion-content>
         <ion-searchbar
+          #searchBar
           debounce="500"
           (ionInput)="searchWallet($event.detail.value || '')"
         ></ion-searchbar>
-        <ion-list>
-          <ion-item
-            *ngFor="let wallet of userWallets$ | async"
-            (click)="selectWallet(wallet.id)"
-          >
-            <ion-label>
-              <h2>{{ wallet.name || "no name" }}</h2>
-              <p *ngIf="wallet.address">{{ wallet.address }}</p>
-            </ion-label>
-          </ion-item>
-        </ion-list>
+        <div *ngIf="userWallets$ | async as userWallets">
+          <ion-list *ngIf="userWallets.length > 0; else createBtn">
+            <ion-item
+              *ngFor="let wallet of userWallets"
+              (click)="selectWallet(wallet.id)"
+            >
+              <ion-label>
+                <h2>{{ wallet.name || "no name" }}</h2>
+                <p *ngIf="wallet.address">{{ wallet.address }}</p>
+              </ion-label>
+            </ion-item>
+          </ion-list>
+        </div>
+        <ng-template #createBtn>
+          <ion-button (click)="createItem({
+            type: 'wallet',
+            payload: searchBar.value
+          })">create wallet</ion-button>
+        </ng-template>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal [isOpen]="openSelectDefi">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Select Defi</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="openSelectDefi = false">Close</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-searchbar
+          #searchBar
+          debounce="500"
+          (ionInput)="searchDefi($event.detail.value || '')"
+        ></ion-searchbar>
+        <div *ngIf="defiProtocols$ | async as defiProtocols">
+          <ion-list *ngIf="defiProtocols.length > 0; else createBtn">
+            <ion-item
+              *ngFor="let defi of defiProtocols"
+              (click)="selectDefi(defi.id)"
+            >
+              <ion-label>
+                <h2>{{ defi.name || "no name" }}</h2>
+              </ion-label>
+            </ion-item>
+          </ion-list>
+        </div>
+        <ng-template #createBtn>
+          <ion-button (click)="createItem({
+            type: 'defiProtocol',
+            payload: searchBar.value
+          })">create defi Protocol</ion-button>
+        </ng-template>
       </ion-content>
     </ng-template>
   </ion-modal>

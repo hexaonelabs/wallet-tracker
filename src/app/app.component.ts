@@ -138,6 +138,7 @@ export class AppComponent {
   public readonly user$: Observable<User | null>;
   public readonly assetPositions$: Observable<AssetPosition[]>;
   public readonly userWallets$: Observable<UserWallet[]>;
+  public readonly defiProtocols$: Observable<any[]>;
   public readonly txForm = new FormGroup({
     tickerId: new FormControl('', Validators.required),
     walletId: new FormControl('', Validators.required),
@@ -148,6 +149,8 @@ export class AppComponent {
     fees: new FormControl(0),
     defiProtocolId: new FormControl(''),
   });
+  public openSelectDefi: boolean = false;
+  public _defiFilterValue$ = new BehaviorSubject<string | undefined>(undefined);
   public openSelectTicker: boolean = false;
   public filteredTickers: any[] = [];
   public openSelectWallet: boolean = false;
@@ -203,6 +206,24 @@ export class AppComponent {
                 .includes(filterBy.toLocaleLowerCase() ?? '')
             )
           : wallets
+      )
+    );
+
+    this.defiProtocols$ = combineLatest([
+      this._db.defiProtocols$,
+      this._defiFilterValue$.asObservable(),
+    ]).pipe(
+      map(([defiProtocols, filterBy]) =>
+        // filter defiProtocols by name if filterBy is set
+        // and has more than 2 characters
+        // otherwise return all defiProtocols
+        filterBy && filterBy.length > 2
+          ? defiProtocols.filter((defiProtocol) =>
+              defiProtocol.name
+                .toLocaleLowerCase()
+                .includes(filterBy.toLocaleLowerCase() ?? '')
+            )
+          : defiProtocols
       )
     );
 
@@ -347,6 +368,15 @@ export class AppComponent {
     this._walletFilterValue$.next(search);
   }
 
+  async searchDefi(search: string) {
+    console.log(search);
+    if (search.length < 2) {
+      this._defiFilterValue$.next(undefined);
+      return;
+    }
+    this._defiFilterValue$.next(search);
+  }
+
   async selectTicker(tickerId: string) {
     this.txForm.patchValue({ tickerId });
     this.filteredTickers = [];
@@ -356,6 +386,13 @@ export class AppComponent {
   async selectWallet(walletId: string) {
     this.txForm.patchValue({ walletId });
     this.openSelectWallet = false;
+    this._walletFilterValue$.next(undefined);
+  }
+
+  async selectDefi(defiProtocolId: string) {
+    this.txForm.patchValue({ defiProtocolId });
+    this.openSelectDefi = false;
+    this._defiFilterValue$.next(undefined);
   }
 
   async selectNetwork(networkId: string) {
@@ -385,5 +422,31 @@ export class AppComponent {
       .toISOString()
       .replace(/ /g, '_')}.json`;
     a.click();
+  }
+
+  async createItem(ops: {
+    type: 'wallet' | 'defiProtocol';
+    payload?: string | null;
+  }) {
+    const uid = (await firstValueFrom(this.user$))?.uid ?? '';
+    const payload = ops.payload;
+    if (!uid) {
+      throw new Error('User is not logged in');
+    }
+    if (!payload) {
+      return;
+    }
+    if (ops.type === 'wallet') {
+      await this._db.addWallet({
+        name: payload,
+        uid,
+      });
+    }
+    if (ops.type === 'defiProtocol') {
+      await this._db.addDefiProtocols({
+        name: payload,
+        uid,
+      });
+    }
   }
 }

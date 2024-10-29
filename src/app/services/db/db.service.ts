@@ -55,6 +55,16 @@ export class DBService {
     this._defiProtocols$.next([]);
   }
 
+  async addWallet(value: Omit<UserWallet, 'id'>) {
+    const colRef = collection(this._firestore, this._COLLECTIONS.userWallet);
+    await addDoc(colRef, value);
+  }
+
+  async addDefiProtocols(value: Omit<any, 'id'>) {
+    const colRef = collection(this._firestore, this._COLLECTIONS.defiProtocols);
+    await addDoc(colRef, value);
+  }
+
   async addTx(tx: Omit<Tx, 'id'>) {
     const colRef = collection(this._firestore, this._COLLECTIONS.tx);
     const result = await addDoc(colRef, tx);
@@ -99,47 +109,6 @@ export class DBService {
         createdAt: tx.createdAt?.toDate() || undefined,
       })),
     ] as Tx[]);
-
-    // const sub = onSnapshot(q, (snapshot) => {
-    //   // console.log('snapshot', snapshot.docs);
-    //   const added = snapshot
-    //     .docChanges()
-    //     .filter((change) => change.type === 'added')
-    //     .map((change) => ({
-    //       ...(change.doc.data() as Tx),
-    //       id: change.doc.id,
-    //     }));
-    //   const modified = snapshot
-    //     .docChanges()
-    //     .filter((change) => change.type === 'modified')
-    //     .map((change) => ({
-    //       ...(change.doc.data() as Tx),
-    //       id: change.doc.id,
-    //     }));
-    //   const removed = snapshot
-    //     .docChanges()
-    //     .filter((change) => change.type === 'removed')
-    //     .map((change) => change.doc.id);
-
-    //   let currentTxs = this._txs$.value;
-
-    //   // Handle added documents
-    //   currentTxs = [...currentTxs, ...added];
-
-    //   // Handle modified documents
-    //   modified.forEach((modifiedTx) => {
-    //     const index = currentTxs.findIndex((tx) => tx.id === modifiedTx.id);
-    //     if (index !== -1) {
-    //       currentTxs[index] = modifiedTx;
-    //     }
-    //   });
-
-    //   // Handle removed documents
-    //   currentTxs = currentTxs.filter((tx) => !removed.includes(tx.id));
-    //   // update the subject
-    //   this._txs$.next(currentTxs);
-    // });
-    // this._subscriptions.push({ collection: this._COLLECTIONS.tx, sub });
   }
 
   private async _loadUserWallets(uid: string) {
