@@ -11,9 +11,11 @@ import {
   deleteDoc,
   QueryConstraint,
   collectionData,
+  limit,
 } from '@angular/fire/firestore';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { Tx, UserWallet } from '../../interfaces';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -95,7 +97,7 @@ export class DBService {
     const colRef = collection(this._firestore, this._COLLECTIONS.tx);
     const constraints = [
       where('uid', '==', uid),
-      // limit(15),
+      environment.isProd ? undefined : limit(15),
       // orderBy('createdAt', 'desc'),
     ].filter(Boolean) as QueryConstraint[];
     const q = query(colRef, ...constraints);

@@ -10,15 +10,23 @@ import { ColorType, IChartApi, createChart } from 'lightweight-charts';
   imports: [CommonModule],
 })
 export class ChartComponent {
+  public price = 0;
+  public time = new Date().toLocaleString();
   @Input() set data(data: number[]) {
-    console.log(data, this._elementRef.nativeElement);
     if (this.chartElement) {
       this.chartElement.remove();
     }
     if (!this._elementRef.nativeElement) {
       return;
     }
-    this.chartElement = createChart(this._elementRef.nativeElement, {
+    const el = this._elementRef.nativeElement.querySelector('div');
+    console.log(el);
+
+    if (!el) {
+      return;
+    }
+    this.price = data[data.length - 1] || 0;
+    this.chartElement = createChart(el, {
       width: 800,
       height: 400,
       layout: {
@@ -43,6 +51,7 @@ export class ChartComponent {
       },
       timeScale: {
         borderVisible: false,
+        visible: false,
       },
       crosshair: {
         horzLine: {
@@ -66,15 +75,25 @@ export class ChartComponent {
       });
     }
     const formattedData = formatDataForChart(data);
-    console.log(formattedData);
     const lineSeries = this.chartElement.addLineSeries();
     lineSeries.setData(
       // loop through the data array and return an object with the time property
       // base on past 7 days starting from now with 30 minutes interval
       formattedData as any
     );
+    //  manage legend
+    const updateLegend = (param: any) => {
+      this.time = param.time
+        ? new Date(param.time).toLocaleString()
+        : new Date().toLocaleString();
+      this.price =
+        param.time && (param.seriesData as Map<any, any>).get(lineSeries)?.value
+          ? (param.seriesData as Map<any, any>).get(lineSeries)?.value
+          : data?.[data.length - 1];
+    };
+    this.chartElement.subscribeCrosshairMove(updateLegend);
   }
   public chartElement!: IChartApi;
 
-  constructor(private readonly _elementRef: ElementRef) {}
+  constructor(private readonly _elementRef: ElementRef<HTMLElement>) {}
 }

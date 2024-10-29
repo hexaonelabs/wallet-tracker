@@ -319,6 +319,7 @@ export class AppComponent {
       componentProps: {
         asset,
       },
+      cssClass: 'full-page-modal',
     });
     await ionModal.present();
   }
