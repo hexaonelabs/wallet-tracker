@@ -3,6 +3,8 @@ import {
   AlertController,
   IonButton,
   IonButtons,
+  IonCard,
+  IonCardContent,
   IonCol,
   IonContent,
   IonGrid,
@@ -14,8 +16,6 @@ import {
   IonList,
   IonNote,
   IonRow,
-  IonSegment,
-  IonSegmentButton,
   IonSelect,
   IonSelectOption,
   IonText,
@@ -28,12 +28,13 @@ import {
 import { CommonModule } from '@angular/common';
 import { map, Observable } from 'rxjs';
 import { DBService } from '../../services/db/db.service';
-import { Tx } from '../../interfaces';
+import { AssetPosition, Tx } from '../../interfaces';
 import { FilterByTickerPipe } from '../../pipes/filter-by-ticker/filter-by-ticker.pipe';
 import { close, trashOutline } from 'ionicons/icons';
 import { addIcons } from 'ionicons';
 import { ToChainNamePipe } from '../../pipes/to-chain-name/to-chain-name.pipe';
 import { ToDefiProtocolNamePipe } from '../../pipes/to-defiprotocol-name/to-defi-protocol-name.pipe';
+import { ChartComponent } from '../chart/chart.component';
 
 const UIElements = [
   IonHeader,
@@ -55,8 +56,8 @@ const UIElements = [
   IonLabel,
   IonTextarea,
   IonNote,
-  IonSegment,
-  IonSegmentButton,
+  IonCard,
+  IonCardContent,
 ];
 
 @Component({
@@ -70,11 +71,12 @@ const UIElements = [
     FilterByTickerPipe,
     ToChainNamePipe,
     ToDefiProtocolNamePipe,
+    ChartComponent,
   ],
 })
 export class TxDetailListComponent {
   public selectedSegment: 'history' | 'location' = 'history';
-  @Input() tickerId!: string;
+  @Input() asset!: AssetPosition;
   public readonly txs$: Observable<Tx[]>;
   public readonly txsLocation$;
 
@@ -94,7 +96,7 @@ export class TxDetailListComponent {
         txs.filter(
           (tx) =>
             tx.tickerId.toLocaleUpperCase() ===
-            this.tickerId.toLocaleUpperCase()
+            this.asset.tickerId.toLocaleUpperCase()
         )
       ),
       // group tx by network and defiProtocolIds

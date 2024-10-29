@@ -1,0 +1,15 @@
+:host {
+
+  ion-col > ion-label > h2 {
+    font-size: 60%;
+    margin-left: 0.25rem!important;
+  }
+  ion-card {
+    margin: 0.25rem;
+    --background: var(--ion-item-background, var(--ion-background-color, #fff));
+  }
+
+  ion-card-content {
+    padding: 0;
+  }
+}

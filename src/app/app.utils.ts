@@ -76,6 +76,13 @@ export const addMarketDatas = async (
       asset.averageCost = await new AveragePipe(_db).transform(asset);
       asset.plDollars = await new PLPipe(_db).transform(asset);
       asset.logo = assetMarketData.image;
+      asset.sparkline7d = assetMarketData.sparkline_in_7d;
+      asset['1h_change'] =
+        assetMarketData.price_change_percentage_1h_in_currency;
+      asset['7d_change'] =
+        assetMarketData.price_change_percentage_7d_in_currency;
+      asset['30d_change'] =
+        assetMarketData.price_change_percentage_30d_in_currency;
 
       const initialInverstmentWorth = asset.averageCost * asset.units;
       asset.plPercentage = new CalculPercentPipe().transform(

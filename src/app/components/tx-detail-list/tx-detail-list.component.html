@@ -1,13 +1,8 @@
 <ion-header>
   <ion-toolbar>
-    <ion-segment [value]="selectedSegment" (ionChange)="segmentChanged($event)">
-      <ion-segment-button value="history">
-        <ion-label>TXs history</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="location">
-        <ion-label>Asset location</ion-label>
-      </ion-segment-button>
-    </ion-segment>
+    <ion-title>
+      {{ asset.tickerId }}
+    </ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="modalCtrl.dismiss()">
         <ion-icon slot="icon-only" name="close"></ion-icon>
@@ -16,59 +11,156 @@
   </ion-toolbar>
 </ion-header>
 <ion-content>
-  <div [ngSwitch]="selectedSegment">
-    <div *ngSwitchCase="'history'">
-      <ion-list>
-        <ion-item *ngFor="let tx of txs$ | async | filterByTicker : tickerId">
-          <ion-label>
-            <h2>
-              {{ tx.tickerId }} 
-              <small>{{ tx.networkId|toChainName|async }}</small> 
-              <small *ngIf="tx.defiProtocolId">
-                {{ tx.defiProtocolId|toDefiProtocolName|async }}
-              </small>
-            </h2>
-            <p>
-              Price: {{ tx.price | currency : "USD" : "symbol" : "1.2-2" }} 
-              <span *ngIf="tx.createdAt">
-                at {{ tx.createdAt | date : "short" }}
-              </span>
-            </p>
+  <ion-grid>
+    <ion-row *ngIf="asset.sparkline7d?.price as sparkline7d">
+      <ion-col>
+        <app-chart [data]="sparkline7d" />
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col size="6">
+        <ion-label color="medium">
+          <h2 class="ion-margin-start" >Wallet Data</h2>
+        </ion-label>
+        <ion-card>
+          <ion-card-content>
+            <ion-item>
+              <ion-label>Quantity</ion-label>
+              <ion-note slot="end">
+                {{ asset['units']||0 }}
+              </ion-note>
+            </ion-item>
+            <ion-item *ngIf="asset['averageCost']">
+              <ion-label>Av.Cost</ion-label>
+              <ion-note slot="end">
+                {{ asset['averageCost']| currency : "USD" : "symbol" : "1.2-2" }}
+              </ion-note>
+            </ion-item>
+            <ion-item *ngIf="asset['plDollars']">
+              <ion-label>PL</ion-label>
+              <ion-note slot="end" [color]="
+                  (asset.plDollars || 0) >= 0 ? 'success' : 'danger'
+                "
+              >
+                {{
+                  asset.plDollars
+                    | currency : "USD" : "symbol" : "1.2-2"
+                }}<br />
+                <small>
+                  {{ asset.plPercentage | number : "1.2-2" || 0 }}%
+                </small>
+              </ion-note>
+            </ion-item>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col size="6"> 
+        <ion-label color="medium">
+          <h2>Market changes</h2>
+        </ion-label>
+        <ion-card>
+          <ion-card-content>
+            <ion-item *ngIf="asset['1h_change']">
+              <ion-label>1h</ion-label>
+              <ion-note slot="end" [color]="asset['1h_change'] > 0 ? 'success' : 'danger'">
+                {{ asset['1h_change'] | number : "1.2-2" }}%
+              </ion-note>
+            </ion-item>
+            <ion-item *ngIf="asset['24h_change']">
+              <ion-label>24h</ion-label>
+              <ion-note slot="end" [color]="asset['24h_change'] > 0 ? 'success' : 'danger'">
+                {{ asset['24h_change'] | number : "1.2-2" }}%
+              </ion-note>
+            </ion-item>
+            <ion-item *ngIf="asset['7d_change']">
+              <ion-label>7d</ion-label>
+              <ion-note slot="end" [color]="asset['7d_change'] > 0 ? 'success' : 'danger'">
+                {{ asset['7d_change'] | number : "1.2-2" }}%
+              </ion-note>
+            </ion-item>
+            <ion-item *ngIf="asset['30d_change']">
+              <ion-label>30d</ion-label>
+              <ion-note slot="end" [color]="asset['30d_change'] > 0 ? 'success' : 'danger'">
+                {{ asset['30d_change'] | number : "1.2-2" }}%
+              </ion-note>
+            </ion-item>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+    
+    <ng-container *ngIf="txsLocation$ | async as entities">
+      <ion-row>
+        <ion-col>
+          <ion-label color="medium">
+            <h2>Entities Location</h2>
           </ion-label>
-          <ion-note class="ion-margin-horizontal ion-text-end" slot="end">
-            {{ tx.total | currency : "USD" : "symbol" : "1.2-2" }}<br />
-            <small> {{ tx.quantity }}x </small>
-          </ion-note>
-          <ion-button
-            color="danger"
-            fill="outline"
-            slot="end"
-            (click)="deleteTx(tx.id)"
-          >
-            <ion-icon name="trash-outline"></ion-icon>
-          </ion-button>
-        </ion-item>
-      </ion-list>
-    </div>
-    <div *ngSwitchCase="'location'">
-      <ng-container  *ngIf="txsLocation$ | async as entities">
-        <ion-grid *ngFor="let group of entities| keyvalue">
-          <ion-row *ngFor="let value of group.value">
-            <ion-col size="3">
-              {{ value.tickerId }}
-            </ion-col>
-            <ion-col size="3">
-              {{ value.quantity }}
-            </ion-col>
-            <ion-col size="3">
-              {{ value.networkId|toChainName|async }}
-            </ion-col>
-            <ion-col size="3">
-              {{ value.defiProtocolId ? (value.defiProtocolId|toDefiProtocolName|async) : ''}}
-            </ion-col>
-          </ion-row>
-        </ion-grid>
-      </ng-container>
-    </div>
-  </div>
+          <ion-card>
+            <ion-card-content>
+              <ion-grid *ngFor="let group of entities| keyvalue">
+                <ion-row *ngFor="let value of group.value">
+                  <ion-col size="3">
+                    {{ value.tickerId }}
+                  </ion-col>
+                  <ion-col size="3">
+                    {{ value.quantity }}
+                  </ion-col>
+                  <ion-col size="3">
+                    {{ value.networkId|toChainName|async }}
+                  </ion-col>
+                  <ion-col size="3">
+                    {{ value.defiProtocolId ? (value.defiProtocolId|toDefiProtocolName|async) : ''}}
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ng-container>
+
+    <ion-row>
+      <ion-col>
+        <ion-label color="medium">
+          <h2>Transactions</h2>
+        </ion-label>
+        <ion-card>
+          <ion-card-content>
+            <ion-list>
+              <ion-item *ngFor="let tx of txs$ | async | filterByTicker : asset.tickerId">
+                <ion-label>
+                  <h2>
+                    {{ tx.tickerId }} 
+                    <small>{{ tx.networkId|toChainName|async }}</small> 
+                    <small *ngIf="tx.defiProtocolId">
+                      {{ tx.defiProtocolId|toDefiProtocolName|async }}
+                    </small>
+                  </h2>
+                  <p>
+                    Price: {{ tx.price | currency : "USD" : "symbol" : "1.2-2" }} 
+                    <span *ngIf="tx.createdAt">
+                      at {{ tx.createdAt | date : "short" }}
+                    </span>
+                  </p>
+                </ion-label>
+                <ion-note class="ion-margin-horizontal ion-text-end" slot="end">
+                  {{ tx.total | currency : "USD" : "symbol" : "1.2-2" }}<br />
+                  <small> {{ tx.quantity }}x </small>
+                </ion-note>
+                <ion-button
+                  color="danger"
+                  fill="outline"
+                  slot="end"
+                  (click)="deleteTx(tx.id)"
+                >
+                  <ion-icon name="trash-outline"></ion-icon>
+                </ion-button>
+              </ion-item>
+            </ion-list>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 </ion-content>

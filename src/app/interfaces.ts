@@ -30,6 +30,10 @@ export interface AssetPosition {
   units: number;
   price: number;
   '24h_change': number;
+  '7d_change'?: number;
+  '30d_change'?: number;
+  '1h_change'?: number;
+  sparkline7d?: { price: number[] };
   total: number;
   averageCost: number;
   plDollars: number;

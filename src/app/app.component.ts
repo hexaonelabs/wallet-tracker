@@ -136,7 +136,7 @@ export class AppComponent {
     name: string;
   }[] = [];
   public readonly user$: Observable<User | null>;
-  public readonly txs$: Observable<AssetPosition[]>;
+  public readonly assetPositions$: Observable<AssetPosition[]>;
   public readonly userWallets$: Observable<UserWallet[]>;
   public readonly txForm = new FormGroup({
     tickerId: new FormControl('', Validators.required),
@@ -211,7 +211,7 @@ export class AppComponent {
     // and calculate total wallet worth and total stale worth
     // and total pl dollars and total pl percentage
     // and sort by total position worth
-    this.txs$ = this._db.txs$.pipe(
+    this.assetPositions$ = this._db.txs$.pipe(
       filter((txs) => !!txs),
       // group txs by ticker id and sum the quantity
       map((txs) => groupByTicker(txs)),
@@ -292,11 +292,11 @@ export class AppComponent {
     await toast.onDidDismiss();
   }
 
-  async openDetails(tickerId: string) {
+  async openDetails(asset: AssetPosition) {
     const ionModal = await this._modalCtrl.create({
       component: TxDetailListComponent,
       componentProps: {
-        tickerId,
+        asset,
       },
     });
     await ionModal.present();

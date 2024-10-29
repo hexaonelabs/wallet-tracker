@@ -198,6 +198,7 @@
         <ion-col size="2" class="ion-text-end"> P/L </ion-col>
         <ion-col size="2" class="ion-text-end"> Wallet % </ion-col>
       </ion-row>
+
       <ion-row
         class="header-table ion-margin-top ion-padding-top ion-align-items-center ion-hide-md-up"
       >
@@ -219,71 +220,71 @@
             <ion-card-content>
               <ion-list>
                 <ion-item
-                  *ngFor="let tx of txs$ | async"
+                  *ngFor="let asset of assetPositions$ | async"
                   button
                   [detail]="false"
-                  (click)="openDetails(tx.tickerId)"
+                  (click)="openDetails(asset)"
                 >
                   <ion-avatar slot="start">
                     <img
-                      [src]="tx.logo"
-                      title="{{ tx.tickerId }}"
-                      alt="{{ tx.tickerId }}"
+                      [src]="asset.logo"
+                      title="{{ asset.tickerId }}"
+                      alt="{{ asset.tickerId }}"
                     />
                   </ion-avatar>
                   <ion-grid class="ion-hide-md-down">
                     <ion-row class="ion-align-items-center">
                       <ion-col size="2">
                         <ion-label>
-                          <h2>{{ tx.tickerId }}</h2>
+                          <h2>{{ asset.tickerId }}</h2>
                           <p>
                             {{
-                              tx.price | currency : "USD" : "symbol" : "1.2-2"
+                              asset.price | currency : "USD" : "symbol" : "1.2-2"
                             }}
                           </p>
                         </ion-label>
                       </ion-col>
                       <ion-col size="2" class="ion-text-end">
                         <ion-text
-                          [color]="tx['24h_change'] >= 0 ? 'success' : 'danger'"
+                          [color]="asset['24h_change'] >= 0 ? 'success' : 'danger'"
                         >
-                          {{ tx["24h_change"] | number : "1.2-2" }}%
+                          {{ asset["24h_change"] | number : "1.2-2" }}%
                         </ion-text>
                       </ion-col>
                       <ion-col size="2" class="ion-text-end">
                         <b>
                           {{
-                            tx
+                            asset
                               | totalPosition
                               | currency : "USD" : "symbol" : "1.2-2"
                           }} </b
                         ><br />
-                        <small> {{ tx.units | number : "1.2-2" }} units</small>
+                        <small> {{ asset.units | number : "1.2-2" }} units</small>
                       </ion-col>
                       <ion-col size="2" class="ion-text-end">
                         {{
-                          tx.averageCost | currency : "USD" : "symbol" : "1.2-2"
+                          asset.averageCost | currency : "USD" : "symbol" : "1.2-2"
                         }}
                       </ion-col>
                       <ion-col size="2" class="ion-text-end">
                         <ion-text
                           [color]="
-                            (tx.plDollars || 0) >= 0 ? 'success' : 'danger'
+                            (asset.plDollars || 0) >= 0 ? 'success' : 'danger'
                           "
                         >
                           {{
-                            tx.plDollars
+                            asset.plDollars
                               | currency : "USD" : "symbol" : "1.2-2"
                           }}<br />
                           <small>
-                            {{ tx.plPercentage | number : "1.2-2" || 0 }}%
+                            {{ asset.plPercentage | number : "1.2-2" || 0 }}%
                           </small>
                         </ion-text>
                       </ion-col>
                       <ion-col size="2" class="ion-text-end">
                         <b>
                           {{
-                            tx
+                            asset
                               | totalPercent : totalWalletWorth
                               | number : "1.2-2"
                           }}%
@@ -296,16 +297,16 @@
                     <ion-row class="ion-align-items-center">
                       <ion-col>
                         <ion-label>
-                          <h2><b>{{ tx.tickerId }}</b></h2>
+                          <h2><b>{{ asset.tickerId }}</b></h2>
                           <p>
                             {{
-                              tx.price | currency : "USD" : "symbol" : "1.2-2"
+                              asset.price | currency : "USD" : "symbol" : "1.2-2"
                             }}
                           </p>
                           <p>
                             <b>
                               {{
-                                tx
+                                asset
                                   | totalPosition
                                   | currency : "USD" : "symbol" : "1.2-2"
                               }} </b
@@ -317,7 +318,7 @@
                         <ion-text>
                           <b>
                             {{
-                              tx
+                              asset
                                 | totalPercent : totalWalletWorth
                                 | number : "1.2-2"
                             }}%
@@ -325,15 +326,15 @@
                         </ion-text>
                         <ion-text
                           [color]="
-                            (tx.plDollars || 0) >= 0 ? 'success' : 'danger'
+                            (asset.plDollars || 0) >= 0 ? 'success' : 'danger'
                           "
                         >
                           {{
-                            tx.plDollars
+                            asset.plDollars
                               | currency : "USD" : "symbol" : "1.2-2"
                           }}<br />
                           <small>
-                            {{ tx.plPercentage | number : "1.2-2" || 0 }}%
+                            {{ asset.plPercentage | number : "1.2-2" || 0 }}%
                           </small>
                         </ion-text>
                       </ion-col>
