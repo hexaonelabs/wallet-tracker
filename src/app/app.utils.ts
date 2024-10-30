@@ -39,6 +39,7 @@ export const addMarketDatas = async (
   const manualIds = [
     { tickerId: 'btc', apiId: 'bitcoin' },
     { tickerId: 'jup', apiId: 'jupiter-exchange-solana' },
+    { tickerId: 'velo', apiId: 'velodrome-finance' },
   ];
   const tickerIds = assetPositions.map((asset) => asset.tickerId);
   const coinsList = await _coinsService.getAllCoinsId();
