@@ -27,19 +27,19 @@
           <ion-card-content>
             <ion-item>
               <ion-label>Quantity</ion-label>
-              <ion-note slot="end">
-                {{ asset['units']||0 }}
-              </ion-note>
+              <ion-text slot="end" class="ion-text-end">
+                {{ (asset['units']||0) | number : "1.2-5" }}
+              </ion-text>
             </ion-item>
             <ion-item *ngIf="asset['averageCost']">
               <ion-label>Av.Cost</ion-label>
-              <ion-note slot="end">
+              <ion-text slot="end" class="ion-text-end">
                 {{ asset['averageCost']| currency : "USD" : "symbol" : "1.2-2" }}
-              </ion-note>
+              </ion-text>
             </ion-item>
             <ion-item *ngIf="asset['plDollars']">
               <ion-label>PL</ion-label>
-              <ion-note slot="end" [color]="
+              <ion-note slot="end" class="ion-text-end" [color]="
                   (asset.plDollars || 0) >= 0 ? 'success' : 'danger'
                 "
               >
