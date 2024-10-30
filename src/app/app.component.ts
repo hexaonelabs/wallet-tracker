@@ -335,8 +335,8 @@ export class AppComponent {
       .filter((coin: { symbol: string }) =>
         coin.symbol.toLocaleLowerCase().includes(search.toLocaleLowerCase())
       )
-      // add limit to 10
-      .slice(0, 20);
+      // add limit
+      .slice(0, 40);
     console.log(filteredCoins);
     this.filteredTickers = filteredCoins;
   }
