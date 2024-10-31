@@ -39,6 +39,9 @@ import {
   IonIcon,
   ToastController,
   IonAvatar,
+  IonFab,
+  IonFabButton,
+  IonFooter,
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import {
@@ -108,6 +111,9 @@ const UIElements = [
   IonCardTitle,
   IonCardSubtitle,
   IonIcon,
+  IonFab,
+  IonFabButton,
+  IonFooter,
 ];
 
 @Component({
@@ -149,6 +155,7 @@ export class AppComponent {
     fees: new FormControl(0),
     defiProtocolId: new FormControl(''),
   });
+  public openAddTx: boolean = false;
   public openSelectDefi: boolean = false;
   public _defiFilterValue$ = new BehaviorSubject<string | undefined>(undefined);
   public openSelectTicker: boolean = false;
@@ -426,7 +433,7 @@ export class AppComponent {
   }
 
   async createItem(ops: {
-    type: 'wallet' | 'defiProtocol';
+    type: 'wallet' | 'defiProtocol' | 'tx';
     payload?: string | null;
   }) {
     const uid = (await firstValueFrom(this.user$))?.uid ?? '';

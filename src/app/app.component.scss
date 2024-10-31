@@ -1,16 +1,26 @@
 :host {
-
   ion-list.resume ion-label {
     font-weight: bolder;
-}
-ion-item, ion-list {
-  background: transparent!important;
-  --background: transparent!important;
-  // --border-color: red!important;
-}
+  }
+  ion-item,
+  ion-list {
+    background: transparent !important;
+    --background: transparent !important;
+    // --border-color: red!important;
+  }
 
-.header-table {
-  margin-left: 5.5rem;
-  margin-right: 3rem;
-}
+  .header-table {
+    margin-left: 5.5rem;
+    margin-right: 3rem;
+  }
+
+  .cardTitle {
+    font-size: 60%;
+    color: var(--ion-color-medium);
+    margin-bottom: 0;
+  }
+
+  ion-card {
+    margin-top: 0.25rem;
+  }
 }
