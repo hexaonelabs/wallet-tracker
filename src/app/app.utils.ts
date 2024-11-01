@@ -118,3 +118,40 @@ export const getTotaltPL = (assetPositions: AssetPosition[]) => {
     0
   );
 };
+
+export const isStableTicker = (tickerId: string) => {
+  const stableTicker = [
+    'USDT',
+    'USDC',
+    'DAI',
+    'TUSD',
+    'BUSD',
+    'USDP',
+    'USDN',
+    'PAX',
+    'HUSD',
+    'GUSD',
+    'SUSD',
+    'UST',
+    'mUSD',
+    'sUSD',
+    'LUSD',
+    'MUSD',
+    'CUSD',
+    'RUSD',
+    'USD',
+    'EURS',
+    'USDS',
+    'USDx',
+    'USDc',
+    'USDG',
+    'USDQ',
+    'USDJ',
+    'USDs',
+    'USDt',
+    'USDx',
+    'USD++',
+  ];
+  const isStableTicker = stableTicker.includes(tickerId);
+  return isStableTicker;
+};

@@ -74,6 +74,7 @@ import {
   getTotaltPL,
   getTotalWalletWorth,
   groupByTicker,
+  isStableTicker,
 } from './app.utils';
 import {
   downloadOutline,
@@ -282,9 +283,15 @@ export class AppComponent {
                 curr.tickerId.toLowerCase().includes(item.toLowerCase())
               );
             });
-            if (ticker) {
-              const index = acc.labels.indexOf(ticker);
-              acc.datasets[index] += curr.total;
+            // group stable ticker
+            if (ticker || isStableTicker(curr.tickerId)) {
+              const index = acc.labels.indexOf(ticker || 'Stable');
+              if (index === -1) {
+                acc.labels.push(ticker || 'Stable');
+                acc.datasets.push(curr.total);
+              } else {
+                acc.datasets[index] += curr.total;
+              }
             } else {
               acc.labels.push(curr.tickerId);
               acc.datasets.push(curr.total);
