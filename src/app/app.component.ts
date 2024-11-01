@@ -272,9 +272,31 @@ export class AppComponent {
 
     this.chart2Data$ = this.assetPositions$.pipe(
       map((assetPositions) => {
-        const labels = assetPositions.map((asset) => asset.tickerId);
-        const datasets = assetPositions.map((asset) => asset.total);
-        return { labels, datasets };
+        const valuesData = assetPositions.reduce(
+          (acc, curr) => {
+            // group ticker that have name that include existing name
+            const ticker = acc.labels.find((item) => {
+              // test if the shorter name is included in the longer name
+              return (
+                item.toLowerCase().includes(curr.tickerId.toLowerCase()) ||
+                curr.tickerId.toLowerCase().includes(item.toLowerCase())
+              );
+            });
+            if (ticker) {
+              const index = acc.labels.indexOf(ticker);
+              acc.datasets[index] += curr.total;
+            } else {
+              acc.labels.push(curr.tickerId);
+              acc.datasets.push(curr.total);
+            }
+            return acc;
+          },
+          {
+            labels: [] as string[],
+            datasets: [] as number[],
+          }
+        );
+        return valuesData;
       })
     );
   }

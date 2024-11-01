@@ -55,8 +55,9 @@ export class Chart2Component {
           },
           datalabels: {
             formatter: function (value, context) {
-              // return value with only 2 decimal places with % sign
-              return `${value.toFixed(2)}%`;
+              return `${
+                context.chart.data.labels?.[context.dataIndex]
+              }: ${value.toFixed(2)}%`;
             },
           },
         },
