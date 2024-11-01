@@ -30,13 +30,20 @@ export class Chart2Component {
     const dataAsPercentage = data.datasets.map(
       (value) => (value / totalWalletWorth) * 100
     );
+    // limit the data to 9 elements & add the rest to 'others'
+    const labelsLimited = [...data.labels.slice(0, 9), 'Others'];
+    const dataLimited = [
+      ...dataAsPercentage.slice(0, 9),
+      dataAsPercentage.slice(9).reduce((acc, curr) => acc + curr, 0),
+    ];
+    // build chart
     this.chartElement = new Chart(el, {
       type: 'doughnut',
       data: {
-        labels: data.labels,
+        labels: labelsLimited,
         datasets: [
           {
-            data: dataAsPercentage,
+            data: dataLimited,
           },
         ],
       },
