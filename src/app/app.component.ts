@@ -82,6 +82,7 @@ import {
   trashOutline,
 } from 'ionicons/icons';
 import { addIcons } from 'ionicons';
+import { Chart2Component } from './components/chart2/chart2.component';
 
 const UIElements = [
   IonApp,
@@ -129,6 +130,7 @@ const UIElements = [
     TotalPercentPipe,
     PLPipe,
     CalculPercentPipe,
+    Chart2Component,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
@@ -165,6 +167,7 @@ export class AppComponent {
     string | undefined
   >(undefined);
   public openSelectNetwork: boolean = false;
+  public chart2Data$: Observable<{ labels: string[]; datasets: number[] }>;
 
   constructor(
     private readonly _auth: Auth,
@@ -265,6 +268,14 @@ export class AppComponent {
           (this.totalStaleWorth = getTotalStableWorth(assetPositions))
       ),
       tap((assetPositions) => (this.totalPL = getTotaltPL(assetPositions)))
+    );
+
+    this.chart2Data$ = this.assetPositions$.pipe(
+      map((assetPositions) => {
+        const labels = assetPositions.map((asset) => asset.tickerId);
+        const datasets = assetPositions.map((asset) => asset.total);
+        return { labels, datasets };
+      })
     );
   }
 
