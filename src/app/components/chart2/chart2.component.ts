@@ -55,9 +55,7 @@ export class Chart2Component {
           },
           datalabels: {
             formatter: function (value, context) {
-              return `${
-                context.chart.data.labels?.[context.dataIndex]
-              }: ${value.toFixed(2)}%`;
+              return `${value.toFixed(2)}%`;
             },
           },
         },
