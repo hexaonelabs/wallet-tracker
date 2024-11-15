@@ -10,8 +10,12 @@
   }
 
   .header-table {
-    margin-left: 5.5rem;
-    margin-right: 3rem;
+    padding-left: 5.5rem;
+    padding-right: 3rem;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--ion-background-color);
   }
 
   .cardTitle {

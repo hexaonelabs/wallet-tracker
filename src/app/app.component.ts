@@ -42,6 +42,7 @@ import {
   IonFab,
   IonFabButton,
   IonFooter,
+  AlertController,
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import {
@@ -84,6 +85,7 @@ import {
 } from 'ionicons/icons';
 import { addIcons } from 'ionicons';
 import { Chart2Component } from './components/chart2/chart2.component';
+import { InitialInvestPipe } from './pipes/initial-invest/initial-invest.pipe';
 
 const UIElements = [
   IonApp,
@@ -131,6 +133,7 @@ const UIElements = [
     TotalPercentPipe,
     PLPipe,
     CalculPercentPipe,
+    InitialInvestPipe,
     Chart2Component,
   ],
   templateUrl: './app.component.html',
@@ -145,18 +148,32 @@ export class AppComponent {
     name: string;
   }[] = [];
   public readonly user$: Observable<User | null>;
-  public readonly assetPositions$: Observable<AssetPosition[]>;
+  public readonly assetPositions$: Observable<
+    ({
+      txs: Tx[];
+    } & AssetPosition)[]
+  >;
   public readonly userWallets$: Observable<UserWallet[]>;
   public readonly defiProtocols$: Observable<any[]>;
   public readonly txForm = new FormGroup({
     tickerId: new FormControl('', Validators.required),
-    walletId: new FormControl('', Validators.required),
-    networkId: new FormControl('', Validators.required),
+    wallet: new FormGroup({
+      id: new FormControl('', Validators.required),
+      displayName: new FormControl('', Validators.required),
+    }),
+    network: new FormGroup({
+      id: new FormControl('', Validators.required),
+      displayName: new FormControl('', Validators.required),
+    }),
     notes: new FormControl(''),
     quantity: new FormControl(0, Validators.required),
     price: new FormControl(0, Validators.required),
     fees: new FormControl(0),
-    defiProtocolId: new FormControl(''),
+    defiProtocol: new FormGroup({
+      id: new FormControl('', Validators.required),
+      displayName: new FormControl('', Validators.required),
+    }),
+    txType: new FormControl(undefined, Validators.required),
   });
   public openAddTx: boolean = false;
   public openSelectDefi: boolean = false;
@@ -339,12 +356,57 @@ export class AppComponent {
     const total =
       (this.txForm.value.quantity ?? 0) * (this.txForm.value.price ?? 0) +
       (this.txForm.value.fees ?? 0);
+    const value = this.txForm.value;
+    const {
+      tickerId,
+      wallet,
+      network,
+      defiProtocol,
+      notes,
+      quantity,
+      price,
+      fees,
+    } = value;
+    if (!tickerId) throw new Error('Ticker is not defined');
+    if (!wallet?.id) throw new Error('Wallet is not defined');
+    if (!network?.id) throw new Error('Network is not defined');
+    // build data object
     const tx: Omit<Tx, 'id'> = {
-      ...(this.txForm.value as any),
+      ...value,
+      fees: fees ?? 0,
+      price: price ?? 0,
+      quantity: quantity ?? 0,
+      notes: notes ?? undefined,
+      tickerId,
+      walletId: wallet.id,
+      networkId: network.id,
+      defiProtocolId: defiProtocol?.id ?? undefined,
       createdAt: new Date(),
       uid: user.uid,
       total,
     };
+    console.log({ tx });
+    const ionAlert = await new AlertController().create({
+      header: 'Add Transaction',
+      message: 'Are you sure you want to add this transaction?',
+      subHeader: `Ticker: ${tickerId}, Quantity: ${quantity}, Price: ${price}, Fees: ${fees}, Total: ${total}`,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+        {
+          text: 'Add',
+          role: 'ok',
+        },
+      ],
+    });
+    await ionAlert.present();
+    const { role } = await ionAlert.onDidDismiss();
+    if (role !== 'ok') {
+      button.disabled = false;
+      return;
+    }
     await this._db.addTx(tx).catch((err) => {
       button.disabled = false;
       throw err;
@@ -431,20 +493,35 @@ export class AppComponent {
     this.openSelectTicker = false;
   }
 
-  async selectWallet(walletId: string) {
-    this.txForm.patchValue({ walletId });
+  async selectWallet(wallet: UserWallet) {
+    this.txForm.patchValue({
+      wallet: {
+        id: wallet.id,
+        displayName: wallet.name,
+      },
+    });
     this.openSelectWallet = false;
     this._walletFilterValue$.next(undefined);
   }
 
-  async selectDefi(defiProtocolId: string) {
-    this.txForm.patchValue({ defiProtocolId });
+  async selectDefi(defiProtocol: { id: string; name: string }) {
+    this.txForm.patchValue({
+      defiProtocol: {
+        id: defiProtocol.id,
+        displayName: defiProtocol.name,
+      },
+    });
     this.openSelectDefi = false;
     this._defiFilterValue$.next(undefined);
   }
 
-  async selectNetwork(networkId: string) {
-    this.txForm.patchValue({ networkId });
+  async selectNetwork(network: { id: string; name: string }) {
+    this.txForm.patchValue({
+      network: {
+        id: network.id,
+        displayName: network.name,
+      },
+    });
     this.openSelectNetwork = false;
   }
 
