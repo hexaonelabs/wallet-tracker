@@ -37,6 +37,12 @@
                 {{ asset['averageCost']| currency : "USD" : "symbol" : "1.2-2" }}
               </ion-text>
             </ion-item>
+            <ion-item *ngIf="asset['txs'].length > 0">
+              <ion-label>Initial Investment</ion-label>
+              <ion-text slot="end" class="ion-text-end">
+                {{ asset | initialInvest | currency : "USD" : "symbol" : "1.2-2"}}
+              </ion-text>
+            </ion-item>
             <ion-item *ngIf="asset['plDollars']">
               <ion-label>PL</ion-label>
               <ion-note slot="end" class="ion-text-end" [color]="
@@ -88,6 +94,40 @@
           </ion-card-content>
         </ion-card>
       </ion-col>
+      <ion-col size-xs="12" size-md="6">
+        <ion-label color="medium">
+          <h2 class="ion-margin-start" >Market Data</h2>
+        </ion-label>
+        <ion-card>
+          <ion-card-content>
+            <ion-item>
+              <ion-label>Total Market Cap.</ion-label>
+              <ion-text slot="end" class="ion-text-end">
+                {{ (asset['marketCap']||0) | currency : "USD" }}
+              </ion-text>
+            </ion-item>
+            <ion-item *ngIf="asset['circulatingSupply']">
+              <ion-label>Circulating supply</ion-label>
+              <ion-text slot="end" class="ion-text-end">
+                {{ asset['circulatingSupply'] | currency : "USD" }}
+              </ion-text>
+            </ion-item>
+            <ion-item *ngIf="asset['maxSupply']">
+              <ion-label>Max supply</ion-label>
+              <ion-text slot="end" class="ion-text-end">
+                {{ asset['maxSupply'] | currency : "USD"  }}
+              </ion-text>
+            </ion-item>
+            <ion-item *ngIf="asset['fdv']">
+              <ion-label>FDV</ion-label>
+              <ion-text slot="end" class="ion-text-end">
+                {{ asset['fdv'] | currency : "USD" }}
+              </ion-text>
+            </ion-item>
+
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
     </ion-row>
     
     <ng-container *ngIf="txsLocation$ | async as entities">
@@ -104,7 +144,7 @@
                     {{ value.tickerId }}
                   </ion-col>
                   <ion-col size="3">
-                    {{ value.quantity }}
+                    {{ value.quantity | number : "1.2-5" }}
                   </ion-col>
                   <ion-col size="3">
                     {{ value.networkId|toChainName|async }}

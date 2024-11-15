@@ -35,6 +35,7 @@ import { addIcons } from 'ionicons';
 import { ToChainNamePipe } from '../../pipes/to-chain-name/to-chain-name.pipe';
 import { ToDefiProtocolNamePipe } from '../../pipes/to-defiprotocol-name/to-defi-protocol-name.pipe';
 import { ChartComponent } from '../chart/chart.component';
+import { InitialInvestPipe } from '../../pipes/initial-invest/initial-invest.pipe';
 
 const UIElements = [
   IonHeader,
@@ -71,12 +72,13 @@ const UIElements = [
     FilterByTickerPipe,
     ToChainNamePipe,
     ToDefiProtocolNamePipe,
+    InitialInvestPipe,
     ChartComponent,
   ],
 })
 export class TxDetailListComponent {
   public selectedSegment: 'history' | 'location' = 'history';
-  @Input() asset!: AssetPosition;
+  @Input() asset!: AssetPosition & { txs: Tx[] };
   public readonly txs$: Observable<Tx[]>;
   public readonly txsLocation$;
 
@@ -137,7 +139,7 @@ export class TxDetailListComponent {
           },
           {} as {
             [key: string]: {
-              defiProtocolId: string;
+              defiProtocolId?: string;
               networkId: string;
               tickerId: string;
               quantity: number;

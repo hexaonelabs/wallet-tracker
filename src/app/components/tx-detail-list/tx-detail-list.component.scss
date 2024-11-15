@@ -16,4 +16,8 @@
   .tv-attr-logo {
     display: none;
   }
+
+  ion-card-content ion-item:last-child {
+    --inner-border-width: 0;
+  }
 }
