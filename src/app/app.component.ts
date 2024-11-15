@@ -48,10 +48,14 @@ import { CommonModule } from '@angular/common';
 import {
   BehaviorSubject,
   combineLatest,
+  distinctUntilChanged,
   filter,
   firstValueFrom,
   map,
   Observable,
+  pairwise,
+  share,
+  startWith,
   switchMap,
   tap,
 } from 'rxjs';
@@ -82,6 +86,7 @@ import {
   closeOutline,
   addOutline,
   trashOutline,
+  refreshOutline,
 } from 'ionicons/icons';
 import { addIcons } from 'ionicons';
 import { Chart2Component } from './components/chart2/chart2.component';
@@ -147,6 +152,7 @@ export class AppComponent {
     id: string;
     name: string;
   }[] = [];
+  public readonly refresh$ = new BehaviorSubject<boolean>(true);
   public readonly user$: Observable<User | null>;
   public readonly assetPositions$: Observable<
     ({
@@ -199,6 +205,7 @@ export class AppComponent {
       closeOutline,
       addOutline,
       trashOutline,
+      refreshOutline,
     });
 
     // manage user authentication state changes
@@ -260,16 +267,40 @@ export class AppComponent {
     // and calculate total wallet worth and total stale worth
     // and total pl dollars and total pl percentage
     // and sort by total position worth
-    this.assetPositions$ = this._db.txs$.pipe(
-      filter((txs) => !!txs),
+    this.assetPositions$ = combineLatest([
+      this._db.txs$,
+      this.refresh$.asObservable().pipe(
+        distinctUntilChanged(),
+        pairwise(),
+        filter(([prev, curr]) => !(prev === true && curr === false)),
+        map(([prev, curr]) => curr),
+        startWith(true)
+      ),
+    ]).pipe(
+      filter(([txs]) => !!txs),
       // group txs by ticker id and sum the quantity
-      map((txs) => groupByTicker(txs)),
+      map(([txs, refresh]) => ({
+        assetPositions: groupByTicker(txs),
+        refresh,
+      })),
       // convert object to array
-      map((assetPositions) => Object.values(assetPositions)),
+      map(({ assetPositions, refresh }) => ({
+        assetPositions: Object.values(assetPositions),
+        refresh,
+      })),
       // get the current price and 24h change; calculate total, average cost, pl dollars and pl percentage
-      switchMap(async (assetPositions) =>
+      switchMap(async ({ assetPositions, refresh }) =>
         assetPositions.length > 0
-          ? await addMarketDatas(assetPositions, { _coinsService, _db })
+          ? await addMarketDatas(assetPositions, {
+              _coinsService,
+              _db,
+              refresh,
+            }).then((result) => {
+              if (refresh === true) {
+                this.refresh$.next(false);
+              }
+              return result;
+            })
           : []
       ),
       // sort by total
@@ -285,7 +316,8 @@ export class AppComponent {
         (assetPositions) =>
           (this.totalStaleWorth = getTotalStableWorth(assetPositions))
       ),
-      tap((assetPositions) => (this.totalPL = getTotaltPL(assetPositions)))
+      tap((assetPositions) => (this.totalPL = getTotaltPL(assetPositions))),
+      share()
     );
 
     this.chart2Data$ = this.assetPositions$.pipe(

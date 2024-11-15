@@ -26,7 +26,10 @@ export class CoinsService {
     return result;
   }
 
-  async getDataMarket(coinsIdList: string[]) {
+  async getDataMarket(coinsIdList: string[], force?: boolean) {
+    if (force) {
+      localStorage.removeItem('coins-market-data');
+    }
     // check if data is available in local storage and last updated less than 30 minutes
     const coinsData = localStorage.getItem('coins-market-data');
     if (coinsData) {

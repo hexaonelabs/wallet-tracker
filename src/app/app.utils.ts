@@ -35,9 +35,11 @@ export const addMarketDatas = async <T>(
   {
     _coinsService,
     _db,
+    refresh = false,
   }: {
     _coinsService: CoinsService;
     _db: DBService;
+    refresh?: boolean;
   }
 ) => {
   const manualIds = [
@@ -68,7 +70,7 @@ export const addMarketDatas = async <T>(
   if (index > -1) {
     coinTickerIds[index] = 'bitcoin';
   }
-  const marketData = await _coinsService.getDataMarket(coinTickerIds);
+  const marketData = await _coinsService.getDataMarket(coinTickerIds, refresh);
   for (const asset of assetPositions) {
     const assetMarketData = marketData.find(
       (market: { symbol: string }) =>

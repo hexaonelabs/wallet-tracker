@@ -12,7 +12,10 @@
             <ion-button (click)="openAddTx = true">
               <ion-icon name="add-outline"></ion-icon>
             </ion-button>
-            <ion-button (click)="backup()" fill="clear">
+            <ion-button [disabled]="refresh$|async" (click)="refresh$.next(true)">
+              <ion-icon name="refresh-outline"></ion-icon>
+            </ion-button>
+            <ion-button (click)="backup()">
               <ion-icon name="download-outline"></ion-icon>
             </ion-button>
             <ion-button (click)="logout()"> Logout </ion-button>
