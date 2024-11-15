@@ -7,7 +7,7 @@ export interface Tx {
   fees?: number;
   total: number;
   networkId: string;
-  defiProtocolId: string;
+  defiProtocolId?: string;
   notes?: string;
   createdAt: Date;
   uid: string;
@@ -33,6 +33,11 @@ export interface AssetPosition {
   '7d_change'?: number;
   '30d_change'?: number;
   '1h_change'?: number;
+  circulatingSupply?: number;
+  marketCap?: number;
+  fdv?: number;
+  maxSupply?: number;
+  totalSupply?: number;
   sparkline7d?: { price: number[] };
   total: number;
   averageCost: number;

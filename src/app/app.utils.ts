@@ -5,7 +5,9 @@ import { PLPipe } from './pipes/pl/pl.pipe';
 import { DBService } from './services/db/db.service';
 import { CalculPercentPipe } from './pipes/calcul-percent/calcul-percent.pipe';
 
-export const groupByTicker = (txs: Tx[]) => {
+export const groupByTicker = (
+  txs: Tx[]
+): Record<string, AssetPosition & { txs: Tx[] }> => {
   return txs.reduce((acc, tx) => {
     const tickerId = tx.tickerId.toLocaleUpperCase();
     if (!acc[tickerId]) {
@@ -18,16 +20,18 @@ export const groupByTicker = (txs: Tx[]) => {
         averageCost: 0,
         plDollars: 0,
         plPercentage: 0,
+        txs: [],
       };
     }
     const asset = acc[tickerId];
     asset.units += tx.quantity;
+    asset.txs.push(tx);
     return acc;
-  }, {} as Record<string, AssetPosition>);
+  }, {} as Record<string, AssetPosition & { txs: Tx[] }>);
 };
 
-export const addMarketDatas = async (
-  assetPositions: AssetPosition[],
+export const addMarketDatas = async <T>(
+  assetPositions: (T & AssetPosition)[],
   {
     _coinsService,
     _db,
@@ -84,6 +88,11 @@ export const addMarketDatas = async (
         assetMarketData.price_change_percentage_7d_in_currency;
       asset['30d_change'] =
         assetMarketData.price_change_percentage_30d_in_currency;
+      asset.circulatingSupply = assetMarketData.circulating_supply;
+      asset.marketCap = assetMarketData.market_cap;
+      asset.fdv = assetMarketData.fully_diluted_valuation;
+      asset.maxSupply = assetMarketData.max_supply;
+      asset.totalSupply = assetMarketData.total_supply;
 
       const initialInverstmentWorth = asset.averageCost * asset.units;
       asset.plPercentage = new CalculPercentPipe().transform(
