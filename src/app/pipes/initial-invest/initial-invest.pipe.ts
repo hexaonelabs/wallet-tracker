@@ -7,9 +7,11 @@ import { AssetPosition, Tx } from '../../interfaces';
 })
 export class InitialInvestPipe implements PipeTransform {
   transform(value: AssetPosition & { txs: Tx[] }): number {
-    // calculate the initial investment based on txs with positive quantity
-    return value.txs.reduce((acc, tx) => {
-      return tx.quantity > 0 ? acc + tx.quantity * tx.price : acc;
-    }, 0);
+    // Calculate total cost of all transactions
+    const totalCost = value.txs.reduce(
+      (sum, tx) => sum + tx.quantity * tx.price,
+      0
+    );
+    return totalCost;
   }
 }
