@@ -69,6 +69,11 @@ export class DBService {
 
   async addTx(tx: Omit<Tx, 'id'>) {
     const colRef = collection(this._firestore, this._COLLECTIONS.tx);
+    // remove all undefined values
+    Object.keys(tx).forEach(
+      (key) => (tx as any)[key] === undefined && delete (tx as any)[key]
+    );
+    // call the addDoc method
     const result = await addDoc(colRef, tx);
     // add new Tx to the list
     const currentTxs = this._txs$.value;
