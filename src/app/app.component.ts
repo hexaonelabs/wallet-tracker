@@ -176,10 +176,10 @@ export class AppComponent {
     price: new FormControl(0, Validators.required),
     fees: new FormControl(0),
     defiProtocol: new FormGroup({
-      id: new FormControl('', Validators.required),
-      displayName: new FormControl('', Validators.required),
+      id: new FormControl(undefined as unknown as string),
+      displayName: new FormControl(undefined as unknown as string),
     }),
-    txType: new FormControl(undefined, Validators.required),
+    txType: new FormControl(undefined),
   });
   public openAddTx: boolean = false;
   public openSelectDefi: boolean = false;
