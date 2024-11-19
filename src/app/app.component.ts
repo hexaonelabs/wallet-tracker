@@ -474,7 +474,7 @@ export class AppComponent {
     const coinsList = await this._coinsService.getAllCoinsId();
     const filteredCoins = coinsList
       .filter((coin: { symbol: string }) =>
-        coin.symbol.toLocaleLowerCase().includes(search.toLocaleLowerCase())
+        coin.symbol.toLocaleLowerCase().startsWith(search.toLocaleLowerCase())
       )
       // add limit
       .slice(0, 40);
