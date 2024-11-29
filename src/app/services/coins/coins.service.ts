@@ -2,6 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { DBService } from '../db/db.service';
+import { Auth, getAuth } from '@angular/fire/auth';
 
 @Injectable({
   providedIn: 'root',
@@ -9,7 +11,11 @@ import { environment } from '../../../environments/environment';
 export class CoinsService {
   private readonly _APIKEY = environment.apiKey;
 
-  constructor(private readonly _http: HttpClient) {}
+  constructor(
+    private readonly _http: HttpClient,
+    private readonly _db: DBService,
+    private _auth: Auth
+  ) {}
 
   async getAllCoinsId() {
     // check if data is available in local storage
@@ -39,10 +45,19 @@ export class CoinsService {
         return data;
       }
     }
+    const currentUser = getAuth().currentUser;
+    if (!currentUser) {
+      return;
+    }
+    const userConfig = await firstValueFrom(this._db.userConfig$);
+    if (!userConfig?.coingeckoApiKey) {
+      return;
+    }
+    const apiKey = userConfig?.coingeckoApiKey;
     // fetch data from api
-    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=id_asc&sparkline=true&price_change_percentage=1h%2C24h%2C7d%2C30d&locale=en&x_cg_demo_api_key=${
-      this._APIKEY
-    }&ids=${coinsIdList.join(',')}`;
+    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=id_asc&sparkline=true&price_change_percentage=1h%2C24h%2C7d%2C30d&locale=en&x_cg_demo_api_key=${apiKey}&ids=${coinsIdList.join(
+      ','
+    )}`;
     const response = this._http.get(url);
     const result = await firstValueFrom(response);
     // save result to local storage

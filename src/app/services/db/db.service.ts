@@ -12,6 +12,9 @@ import {
   QueryConstraint,
   collectionData,
   limit,
+  updateDoc,
+  getDoc,
+  setDoc,
 } from '@angular/fire/firestore';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { Tx, UserWallet } from '../../interfaces';
@@ -24,22 +27,27 @@ export class DBService {
   private readonly _COLLECTIONS = {
     tx: 'txs',
     userWallet: 'user-wallet',
+    userConfig: 'user-config',
     defiProtocols: 'defi-protocols',
   };
   private readonly _txs$: BehaviorSubject<Tx[]> = new BehaviorSubject<Tx[]>(
     [] as unknown as Tx[]
   );
   private readonly _userWallets$: BehaviorSubject<UserWallet[]> =
-    new BehaviorSubject<UserWallet[]>([]);
+    new BehaviorSubject<UserWallet[]>(undefined as unknown as UserWallet[]);
   private readonly _defiProtocols$: BehaviorSubject<any[]> =
     new BehaviorSubject([] as unknown as Tx[]);
+  private readonly _userConfig$: BehaviorSubject<{
+    coingeckoApiKey: string;
+  }> = new BehaviorSubject(undefined as unknown as any);
   private readonly _subscriptions: {
     sub: Subscribtion;
     collection: string;
   }[] = [];
-  public readonly txs$ = this._txs$.asObservable();
+  public readonly txs$ = this._txs$.asObservable().pipe();
   public readonly userWallets$ = this._userWallets$.asObservable();
-  public readonly defiProtocols$ = this._defiProtocols$.asObservable();
+  public readonly defiProtocols$ = this._defiProtocols$.asObservable().pipe();
+  public readonly userConfig$ = this._userConfig$.asObservable().pipe();
 
   constructor(private readonly _firestore: Firestore) {}
 
@@ -47,6 +55,7 @@ export class DBService {
     this._loadTxs(uid);
     this._loadUserWallets(uid);
     this._loadDefiProtocols(uid);
+    this._loadConfig(uid);
   }
 
   async clearData() {
@@ -76,7 +85,7 @@ export class DBService {
     // call the addDoc method
     const result = await addDoc(colRef, tx);
     // add new Tx to the list
-    const currentTxs = this._txs$.value;
+    const currentTxs = this._txs$.value ?? [];
     this._txs$.next([...currentTxs, { ...tx, id: result.id }]);
   }
 
@@ -84,7 +93,7 @@ export class DBService {
     const docRef = doc(this._firestore, this._COLLECTIONS.tx, id);
     await deleteDoc(docRef);
     // update the list
-    const currentTxs = this._txs$.value;
+    const currentTxs = this._txs$.value ?? [];
     const index = currentTxs.findIndex((tx) => tx.id === id);
     if (index !== -1) {
       currentTxs.splice(index, 1);
@@ -92,6 +101,18 @@ export class DBService {
     }
   }
 
+  async updateUserConfig(uid: string, value: { coingeckoApiKey: string }) {
+    const docRef = doc(
+      this._firestore,
+      this._COLLECTIONS.userConfig + `/${uid}`
+    );
+    const docExist = (await getDoc(docRef)).exists();
+    if (!docExist) {
+      await setDoc(docRef, value);
+    } else {
+      await updateDoc(docRef, value);
+    }
+  }
   private async _loadTxs(uid: string) {
     // check if there is already a subscription
     if (
@@ -110,12 +131,17 @@ export class DBService {
     const data: any[] = await firstValueFrom(
       collectionData(q, { idField: 'id' })
     );
-    this._txs$.next([
-      ...data.map((tx) => ({
-        ...tx,
-        createdAt: tx.createdAt?.toDate() || undefined,
-      })),
-    ] as Tx[]);
+    this._txs$.next(
+      data.length > 0
+        ? ([
+            ...data.map((tx) => ({
+              ...tx,
+              createdAt: tx.createdAt?.toDate() || undefined,
+            })),
+          ] as Tx[])
+        : (undefined as unknown as Tx[])
+    );
+    console.log('tx data', this._txs$.value);
   }
 
   private async _loadUserWallets(uid: string) {
@@ -135,7 +161,11 @@ export class DBService {
         ...(doc.data() as Omit<UserWallet, 'id'>),
         id: doc.id,
       }));
-      this._userWallets$.next(data);
+      console.log('wallet data', data);
+
+      this._userWallets$.next(
+        data.length > 0 ? data : (undefined as unknown as UserWallet[])
+      );
     });
     this._subscriptions.push({ collection: this._COLLECTIONS.userWallet, sub });
   }
@@ -165,5 +195,30 @@ export class DBService {
       collection: this._COLLECTIONS.defiProtocols,
       sub,
     });
+  }
+
+  private async _loadConfig(uid: string) {
+    if (
+      this._subscriptions.find(
+        (sub) => sub.collection === this._COLLECTIONS.userConfig
+      )
+    ) {
+      return;
+    }
+    const docRef = doc(
+      this._firestore,
+      this._COLLECTIONS.userConfig + `/${uid}`
+    );
+    const sub = onSnapshot(docRef, (snapshot) => {
+      if (!snapshot.exists()) {
+        return;
+      }
+      const data = {
+        ...snapshot.data(),
+        id: snapshot.id,
+      } as { coingeckoApiKey: string; id: string };
+      this._userConfig$.next(data);
+    });
+    this._subscriptions.push({ collection: this._COLLECTIONS.userConfig, sub });
   }
 }

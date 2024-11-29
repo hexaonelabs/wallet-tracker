@@ -4,8 +4,10 @@
       <ion-grid fixed>
         <ion-row class="ion-padding ion-align-items-center">
           <ion-col>
-            <h1>Hexa Wallets Tracker</h1>
-            <p>Welcome, {{ user.email }}</p>
+            <h1>TXS Tracker</h1>
+            <p>
+              Track your crypto transactions
+            </p>
             <p></p>
           </ion-col>
           <ion-col size="auto">
@@ -23,9 +25,7 @@
         </ion-row>
   
         <ng-container *ngIf="userWallets$|async as userWallets; else noUserWallets">
-          
-          <ng-container *ngIf="assetPositions$ | async as assetPositions;else noAssetPositions">
-            
+          <ng-container *ngIf="assetPositions$ | async as assetPositions ;else noAssetPositions">
             <ion-row>
               <ion-col size="12" size-md="6">
                 <h2 class="ion-margin-start cardTitle">Overview</h2>
@@ -385,7 +385,7 @@
                       <h2>No asset positions</h2>
                       <p>Click on the button below to add a new transaction</p>
                     </ion-text>
-                    <ion-button (click)="createItem({ type: 'tx' })">
+                    <ion-button (click)="openAddTx = true">
                       Add Transaction
                     </ion-button>
                   </ion-card-content>
@@ -404,7 +404,19 @@
                     <h2>No wallets</h2>
                     <p>Click on the button below to add a new wallet</p>
                   </ion-text>
-                  <ion-button (click)="createItem({ type: 'wallet' })">
+                  <ion-input
+                    #walletNameInput
+                    class="ion-margin-top"
+                    label="Wallet name"
+                    label-position="stacked"
+                    fill="outline"
+                    mode="md"
+                    type="text"
+                    placeholder="enter a name for your wallet" />
+                  <ion-button 
+                    class="ion-margin-top"
+                    [disabled]="!walletNameInput.value"
+                    (click)="createItem({ type: 'wallet', payload: $any(walletNameInput.value) })">
                     Add Wallet
                   </ion-button>
                 </ion-card-content>

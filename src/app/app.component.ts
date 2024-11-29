@@ -54,7 +54,7 @@ import {
   map,
   Observable,
   pairwise,
-  share,
+  shareReplay,
   startWith,
   switchMap,
   tap,
@@ -161,6 +161,8 @@ export class AppComponent {
   >;
   public readonly userWallets$: Observable<UserWallet[]>;
   public readonly defiProtocols$: Observable<any[]>;
+  public readonly userConfig$;
+
   public readonly txForm = new FormGroup({
     tickerId: new FormControl('', Validators.required),
     wallet: new FormGroup({
@@ -223,6 +225,7 @@ export class AppComponent {
 
     // connect user Observable
     this.user$ = authState(this._auth);
+    this.userConfig$ = this._db.userConfig$;
     // build userWallets Observable using
     // `_walletFilterValue$` to filter the wallets
 
@@ -241,7 +244,8 @@ export class AppComponent {
                 .includes(filterBy.toLocaleLowerCase() ?? '')
             )
           : wallets
-      )
+      ),
+      shareReplay()
     );
 
     this.defiProtocols$ = combineLatest([
@@ -277,6 +281,62 @@ export class AppComponent {
         startWith(true)
       ),
     ]).pipe(
+      tap(async ([assetPositions]) => {
+        const userConfig = await firstValueFrom(this.userConfig$);
+        console.log('assetPositions', assetPositions, userConfig);
+        if (
+          assetPositions === undefined &&
+          userConfig?.coingeckoApiKey === undefined
+        ) {
+          // ask user to add coingeckoApiKey
+          const askToCOnfig = async () => {
+            const ionAlert = await new AlertController().create({
+              header: 'Add Coingecko API Key',
+              message: 'Please add your Coingecko API Key to get market data',
+              inputs: [
+                {
+                  name: 'apiKey',
+                  type: 'text',
+                  placeholder: 'Coingecko API Key',
+                },
+              ],
+              buttons: [
+                {
+                  text: 'Cancel',
+                  role: 'cancel',
+                },
+                {
+                  text: 'Add',
+                  role: 'ok',
+                },
+              ],
+            });
+            await ionAlert.present();
+            const { role, data } = await ionAlert.onDidDismiss();
+            if (role !== 'ok') {
+              return false;
+            }
+            if (!data?.values?.apiKey) {
+              return false;
+            }
+            const currentUser = await firstValueFrom(this.user$);
+            if (!currentUser) {
+              return false;
+            }
+            await this._db.updateUserConfig(currentUser.uid, {
+              coingeckoApiKey: data.values.apiKey,
+            });
+            return true;
+          };
+          while (true) {
+            // wait for user to add coingeckoApiKey
+            const result = await askToCOnfig();
+            if (result === true) {
+              break;
+            }
+          }
+        }
+      }),
       filter(([txs]) => !!txs),
       // group txs by ticker id and sum the quantity
       map(([txs, refresh]) => ({
@@ -317,12 +377,17 @@ export class AppComponent {
           (this.totalStaleWorth = getTotalStableWorth(assetPositions))
       ),
       tap((assetPositions) => (this.totalPL = getTotaltPL(assetPositions))),
-      share()
-    );
+      // return undefined if there is no data in the array
+      map((assetPositions) =>
+        assetPositions.length > 0
+          ? assetPositions
+          : (undefined as unknown as AssetPosition[])
+      )
+    ) as Observable<({ txs: Tx[] } & AssetPosition)[]>; // cast to the correct type
 
     this.chart2Data$ = this.assetPositions$.pipe(
       map((assetPositions) => {
-        const valuesData = assetPositions.reduce(
+        const valuesData = assetPositions?.reduce(
           (acc, curr) => {
             // group ticker that have name that include existing name
             const ticker = acc.labels.find((item) => {
@@ -487,7 +552,7 @@ export class AppComponent {
     if (search.length < 2) {
       this.networks = [];
     }
-    const txs = await firstValueFrom(this._db.txs$);
+    const txs = (await firstValueFrom(this._db.txs$)) ?? [];
     const networksFromTxs = txs.map((tx) => tx.networkId);
     const networks = await this._coinsService.getChainIdList(networksFromTxs);
     console.log(networks);
@@ -559,9 +624,9 @@ export class AppComponent {
 
   async backup() {
     console.log('backup');
-    const txs = await firstValueFrom(this._db.txs$);
-    const userWallets = await firstValueFrom(this.userWallets$);
-    const defiProtocols = await firstValueFrom(this._db.defiProtocols$);
+    const txs = (await firstValueFrom(this._db.txs$)) ?? [];
+    const userWallets = (await firstValueFrom(this.userWallets$)) ?? [];
+    const defiProtocols = (await firstValueFrom(this._db.defiProtocols$)) ?? [];
     console.log(txs, userWallets, defiProtocols);
 
     const data = {
