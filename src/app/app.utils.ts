@@ -72,7 +72,7 @@ export const addMarketDatas = async <T>(
   }
   const marketData = await _coinsService.getDataMarket(coinTickerIds, refresh);
   for (const asset of assetPositions) {
-    const assetMarketData = marketData.find(
+    const assetMarketData = marketData?.find(
       (market: { symbol: string }) =>
         market.symbol.toLocaleLowerCase() === asset.tickerId.toLocaleLowerCase()
     );

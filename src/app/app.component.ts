@@ -43,6 +43,9 @@ import {
   IonFabButton,
   IonFooter,
   AlertController,
+  IonAlert,
+  LoadingController,
+  AlertButton,
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import {
@@ -54,6 +57,7 @@ import {
   map,
   Observable,
   pairwise,
+  share,
   shareReplay,
   startWith,
   switchMap,
@@ -87,6 +91,7 @@ import {
   addOutline,
   trashOutline,
   refreshOutline,
+  ellipsisVertical,
 } from 'ionicons/icons';
 import { addIcons } from 'ionicons';
 import { Chart2Component } from './components/chart2/chart2.component';
@@ -94,6 +99,7 @@ import { InitialInvestPipe } from './pipes/initial-invest/initial-invest.pipe';
 
 const UIElements = [
   IonApp,
+  IonAlert,
   IonContent,
   IonAvatar,
   IonGrid,
@@ -194,6 +200,52 @@ export class AppComponent {
   >(undefined);
   public openSelectNetwork: boolean = false;
   public chart2Data$: Observable<{ labels: string[]; datasets: number[] }>;
+  public readonly alertOptionsButtons: AlertButton[] = [
+    {
+      text: 'Refresh',
+      role: 'refresh',
+      handler: async () => {
+        // get current alert open
+        const alert = await new AlertController().getTop();
+        if (!alert) {
+          return;
+        }
+        // close current alert
+        await alert.dismiss();
+        this.refresh$.next(true);
+      },
+    },
+    {
+      text: 'Download Backup',
+      role: 'download',
+      handler: async () => {
+        // get current alert open
+        const alert = await new AlertController().getTop();
+        if (!alert) {
+          return;
+        }
+        // close current alert
+        await alert.dismiss();
+        // show loader
+        const ionLoader = await new LoadingController().create({
+          message: 'Downloading Backup...',
+        });
+        await ionLoader.present();
+        await this.backup();
+        await ionLoader.dismiss();
+        const ionToast = await new ToastController().create({
+          message: 'Backup downloaded',
+          duration: 2000,
+          color: 'success',
+        });
+        await ionToast.present();
+      },
+    },
+    {
+      text: 'Cancel',
+      role: 'cancel',
+    },
+  ];
 
   constructor(
     private readonly _auth: Auth,
@@ -208,6 +260,7 @@ export class AppComponent {
       addOutline,
       trashOutline,
       refreshOutline,
+      ellipsisVertical,
     });
 
     // manage user authentication state changes
@@ -225,7 +278,79 @@ export class AppComponent {
 
     // connect user Observable
     this.user$ = authState(this._auth);
-    this.userConfig$ = this._db.userConfig$;
+    this.userConfig$ = this._db.userConfig$.pipe(
+      tap(async (userConfig) => {
+        if (
+          // user don't have config
+          userConfig === null ||
+          // user have config but don't have coingeckoApiKey
+          (!userConfig?.coingeckoApiKey && userConfig !== undefined) ||
+          // user have config but coingeckoApiKey is empty
+          (userConfig && (userConfig?.coingeckoApiKey?.length ?? 0) <= 0)
+        ) {
+          // ask user to add coingeckoApiKey
+          const askToCOnfig = async () => {
+            const ionAlert = await new AlertController().create({
+              header: 'Add Coingecko API Key',
+              message: 'Please add your Coingecko API Key to calculate PL',
+              backdropDismiss: false,
+              keyboardClose: false,
+              inputs: [
+                {
+                  name: 'apiKey',
+                  type: 'text',
+                  placeholder: 'Coingecko API Key',
+                },
+              ],
+              buttons: [
+                {
+                  text: 'Cancel',
+                  role: 'cancel',
+                },
+                {
+                  text: 'Add',
+                  role: 'ok',
+                },
+              ],
+            });
+            await ionAlert.present();
+            const { role, data } = await ionAlert.onDidDismiss();
+            if (role !== 'ok') {
+              return false;
+            }
+            if (!data?.values?.apiKey) {
+              return false;
+            }
+            if (!data.values.apiKey.startsWith('CG-')) {
+              const toast = await this._toastCtrl.create({
+                message: 'Invalid API Key',
+                duration: 2000,
+                color: 'danger',
+              });
+              await toast.present();
+              return false;
+            }
+            const currentUser = await firstValueFrom(this.user$);
+            if (!currentUser) {
+              return false;
+            }
+            await this._db.updateUserConfig(currentUser.uid, {
+              coingeckoApiKey: data.values.apiKey,
+            });
+            return true;
+          };
+
+          while (true) {
+            // wait for user to add coingeckoApiKey
+            const result = await askToCOnfig();
+            if (result === true) {
+              break;
+            }
+          }
+        }
+      }),
+      share()
+    );
     // build userWallets Observable using
     // `_walletFilterValue$` to filter the wallets
 
@@ -245,7 +370,7 @@ export class AppComponent {
             )
           : wallets
       ),
-      shareReplay()
+      share()
     );
 
     this.defiProtocols$ = combineLatest([
@@ -281,62 +406,6 @@ export class AppComponent {
         startWith(true)
       ),
     ]).pipe(
-      tap(async ([assetPositions]) => {
-        const userConfig = await firstValueFrom(this.userConfig$);
-        console.log('assetPositions', assetPositions, userConfig);
-        if (
-          assetPositions === undefined &&
-          userConfig?.coingeckoApiKey === undefined
-        ) {
-          // ask user to add coingeckoApiKey
-          const askToCOnfig = async () => {
-            const ionAlert = await new AlertController().create({
-              header: 'Add Coingecko API Key',
-              message: 'Please add your Coingecko API Key to get market data',
-              inputs: [
-                {
-                  name: 'apiKey',
-                  type: 'text',
-                  placeholder: 'Coingecko API Key',
-                },
-              ],
-              buttons: [
-                {
-                  text: 'Cancel',
-                  role: 'cancel',
-                },
-                {
-                  text: 'Add',
-                  role: 'ok',
-                },
-              ],
-            });
-            await ionAlert.present();
-            const { role, data } = await ionAlert.onDidDismiss();
-            if (role !== 'ok') {
-              return false;
-            }
-            if (!data?.values?.apiKey) {
-              return false;
-            }
-            const currentUser = await firstValueFrom(this.user$);
-            if (!currentUser) {
-              return false;
-            }
-            await this._db.updateUserConfig(currentUser.uid, {
-              coingeckoApiKey: data.values.apiKey,
-            });
-            return true;
-          };
-          while (true) {
-            // wait for user to add coingeckoApiKey
-            const result = await askToCOnfig();
-            if (result === true) {
-              break;
-            }
-          }
-        }
-      }),
       filter(([txs]) => !!txs),
       // group txs by ticker id and sum the quantity
       map(([txs, refresh]) => ({
@@ -382,7 +451,8 @@ export class AppComponent {
         assetPositions.length > 0
           ? assetPositions
           : (undefined as unknown as AssetPosition[])
-      )
+      ),
+      shareReplay()
     ) as Observable<({ txs: Tx[] } & AssetPosition)[]>; // cast to the correct type
 
     this.chart2Data$ = this.assetPositions$.pipe(
@@ -418,7 +488,8 @@ export class AppComponent {
           }
         );
         return valuesData;
-      })
+      }),
+      shareReplay()
     );
   }
 
@@ -463,13 +534,14 @@ export class AppComponent {
       quantity,
       price,
       fees,
+      ...rest
     } = value;
     if (!tickerId) throw new Error('Ticker is not defined');
     if (!wallet?.id) throw new Error('Wallet is not defined');
     if (!network?.id) throw new Error('Network is not defined');
     // build data object
     const tx: Omit<Tx, 'id'> = {
-      ...value,
+      ...rest,
       fees: fees ?? 0,
       price: price ?? 0,
       quantity: quantity ?? 0,
@@ -541,6 +613,19 @@ export class AppComponent {
       .filter((coin: { symbol: string }) =>
         coin.symbol.toLocaleLowerCase().startsWith(search.toLocaleLowerCase())
       )
+      // remove ticker with `bridged` in the name
+      .filter(
+        (coin: { name: string; symbol: string }) =>
+          !coin.name.toLocaleLowerCase().includes('bridged') &&
+          !coin.name.toLocaleLowerCase().includes('mapped') &&
+          !coin.name.toLocaleLowerCase().includes('merged') &&
+          coin.name.length > 0 &&
+          coin.symbol.length > 0
+      )
+      // sort by ticker symbol ascending
+      .sort((a: { symbol: string }, b: { symbol: string }) =>
+        a.symbol.localeCompare(b.symbol)
+      )
       // add limit
       .slice(0, 40);
     console.log(filteredCoins);
@@ -588,6 +673,8 @@ export class AppComponent {
     this.txForm.patchValue({ tickerId });
     this.filteredTickers = [];
     this.openSelectTicker = false;
+    // run form validation
+    this.txForm?.markAllAsTouched();
   }
 
   async selectWallet(wallet: UserWallet) {
@@ -613,6 +700,12 @@ export class AppComponent {
   }
 
   async selectNetwork(network: { id: string; name: string }) {
+    if (!network) {
+      return;
+    }
+    if (network.id.length <= 0 || network.name.length <= 0) {
+      return;
+    }
     this.txForm.patchValue({
       network: {
         id: network.id,
@@ -670,5 +763,58 @@ export class AppComponent {
         uid,
       });
     }
+  }
+
+  async updateUserConfig() {
+    const userConfig = await firstValueFrom(this.userConfig$);
+    const ionAlert = await new AlertController().create({
+      header: 'Coingecko API Key',
+      message: 'Manage your Coingecko API Key',
+      backdropDismiss: false,
+      keyboardClose: false,
+      inputs: [
+        {
+          name: 'apiKey',
+          type: 'text',
+          placeholder: 'Coingecko API Key',
+          value: userConfig?.coingeckoApiKey,
+        },
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+        {
+          text: 'update',
+          role: 'ok',
+        },
+      ],
+    });
+    await ionAlert.present();
+    const { role, data } = await ionAlert.onDidDismiss();
+    if (role !== 'ok') {
+      return false;
+    }
+    if (!data?.values?.apiKey) {
+      return false;
+    }
+    if (!data.values.apiKey.startsWith('CG-')) {
+      const toast = await this._toastCtrl.create({
+        message: 'Invalid API Key',
+        duration: 2000,
+        color: 'danger',
+      });
+      await toast.present();
+      return false;
+    }
+    const currentUser = await firstValueFrom(this.user$);
+    if (!currentUser) {
+      return false;
+    }
+    await this._db.updateUserConfig(currentUser.uid, {
+      coingeckoApiKey: data.values.apiKey,
+    });
+    return true;
   }
 }

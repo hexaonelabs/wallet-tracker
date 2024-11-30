@@ -47,11 +47,11 @@ export class CoinsService {
     }
     const currentUser = getAuth().currentUser;
     if (!currentUser) {
-      return;
+      return [];
     }
     const userConfig = await firstValueFrom(this._db.userConfig$);
     if (!userConfig?.coingeckoApiKey) {
-      return;
+      return [];
     }
     const apiKey = userConfig?.coingeckoApiKey;
     // fetch data from api

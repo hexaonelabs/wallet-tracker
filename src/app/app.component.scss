@@ -1,6 +1,9 @@
 :host {
   ion-list.resume ion-label {
     font-weight: bolder;
+    p {
+      font-weight: normal;
+    }
   }
   ion-item,
   ion-list {

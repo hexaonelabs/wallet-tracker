@@ -109,10 +109,8 @@ export class TxDetailListComponent {
             if (!acc[key]) {
               acc[key] = [
                 {
-                  defiProtocolId: tx.defiProtocolId,
-                  networkId: tx.networkId,
+                  ...tx,
                   tickerId: tx.tickerId.toLocaleUpperCase(),
-                  quantity: tx.quantity,
                 },
               ];
             } else {
@@ -128,22 +126,15 @@ export class TxDetailListComponent {
                 quantity.quantity += tx.quantity;
               } else {
                 acc[key].push({
-                  defiProtocolId: tx.defiProtocolId,
-                  networkId: tx.networkId,
+                  ...tx,
                   tickerId: tx.tickerId.toLocaleUpperCase(),
-                  quantity: tx.quantity,
                 });
               }
             }
             return acc;
           },
           {} as {
-            [key: string]: {
-              defiProtocolId?: string;
-              networkId: string;
-              tickerId: string;
-              quantity: number;
-            }[];
+            [key: string]: Tx[];
           }
         );
       }),

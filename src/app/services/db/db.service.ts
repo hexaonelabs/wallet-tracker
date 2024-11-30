@@ -26,7 +26,7 @@ import { environment } from '../../../environments/environment';
 export class DBService {
   private readonly _COLLECTIONS = {
     tx: 'txs',
-    userWallet: 'user-wallet',
+    userWallet: 'user-wallets',
     userConfig: 'user-config',
     defiProtocols: 'defi-protocols',
   };
@@ -37,9 +37,13 @@ export class DBService {
     new BehaviorSubject<UserWallet[]>(undefined as unknown as UserWallet[]);
   private readonly _defiProtocols$: BehaviorSubject<any[]> =
     new BehaviorSubject([] as unknown as Tx[]);
-  private readonly _userConfig$: BehaviorSubject<{
-    coingeckoApiKey: string;
-  }> = new BehaviorSubject(undefined as unknown as any);
+  private readonly _userConfig$: BehaviorSubject<
+    | {
+        coingeckoApiKey?: string;
+      }
+    | undefined
+    | null
+  > = new BehaviorSubject(undefined as any);
   private readonly _subscriptions: {
     sub: Subscribtion;
     collection: string;
@@ -52,10 +56,10 @@ export class DBService {
   constructor(private readonly _firestore: Firestore) {}
 
   async loadUserData(uid: string) {
+    this._loadConfig(uid);
     this._loadTxs(uid);
     this._loadUserWallets(uid);
     this._loadDefiProtocols(uid);
-    this._loadConfig(uid);
   }
 
   async clearData() {
@@ -133,12 +137,29 @@ export class DBService {
     );
     this._txs$.next(
       data.length > 0
-        ? ([
-            ...data.map((tx) => ({
-              ...tx,
-              createdAt: tx.createdAt?.toDate() || undefined,
-            })),
-          ] as Tx[])
+        ? (
+            [
+              ...data.map((tx) => ({
+                ...tx,
+                createdAt: tx.createdAt?.toDate
+                  ? tx.createdAt?.toDate()
+                  : new Date(tx.createdAt) || undefined,
+              })),
+            ] as Tx[]
+          )
+            // sort by createdAt desc with undefined at the end
+            .sort((a, b) => {
+              if (a.createdAt && b.createdAt) {
+                return b.createdAt.getTime() - a.createdAt.getTime();
+              }
+              if (a.createdAt) {
+                return -1;
+              }
+              if (b.createdAt) {
+                return 1;
+              }
+              return 0;
+            })
         : (undefined as unknown as Tx[])
     );
     console.log('tx data', this._txs$.value);
@@ -211,6 +232,7 @@ export class DBService {
     );
     const sub = onSnapshot(docRef, (snapshot) => {
       if (!snapshot.exists()) {
+        this._userConfig$.next(null);
         return;
       }
       const data = {

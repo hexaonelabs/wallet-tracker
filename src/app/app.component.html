@@ -4,28 +4,62 @@
       <ion-grid fixed>
         <ion-row class="ion-padding ion-align-items-center">
           <ion-col>
-            <h1>TXS Tracker</h1>
-            <p>
-              Track your crypto transactions
+            <h1 class="ion-no-margin ion-margin-top">TXS Tracker</h1>
+            <p class="ion-no-margin ion-margin-bottom">
+              Tracking on-chain transactions<br />
+              <small (click)="updateUserConfig()">
+                <ion-text color="medium">
+                  CoinGecko API Key:
+                  {{
+                    (userConfig$ | async)?.coingeckoApiKey | slice : 0 : 8
+                  }}...{{ (userConfig$ | async)?.coingeckoApiKey | slice : -5 }}
+                  <br />
+                </ion-text>
+              </small>
             </p>
-            <p></p>
           </ion-col>
           <ion-col size="auto">
-            <ion-button (click)="openAddTx = true">
-              <ion-icon name="add-outline"></ion-icon>
-            </ion-button>
-            <ion-button [disabled]="refresh$|async" (click)="refresh$.next(true)">
-              <ion-icon name="refresh-outline"></ion-icon>
-            </ion-button>
-            <ion-button (click)="backup()">
-              <ion-icon name="download-outline"></ion-icon>
-            </ion-button>
+            <ng-container
+              *ngIf="
+                (userConfig$ | async)?.coingeckoApiKey &&
+                (assetPositions$ | async)
+              "
+            >
+              <ion-button (click)="openAddTx = true">
+                <ion-icon name="add-outline"></ion-icon>
+              </ion-button>
+              <ion-button id="present-alert-options">
+                <ion-icon name="ellipsis-vertical"></ion-icon>
+              </ion-button>
+              <ion-alert
+                trigger="present-alert-options"
+                header="Options"
+                subHeader="Select an option"
+                [buttons]="alertOptionsButtons"
+              />
+              <!-- <ion-button
+                [disabled]="refresh$ | async"
+                (click)="refresh$.next(true)"
+              >
+                <ion-icon name="refresh-outline"></ion-icon>
+              </ion-button>
+              <ion-button (click)="backup()">
+                <ion-icon name="download-outline"></ion-icon>
+              </ion-button> -->
+            </ng-container>
             <ion-button (click)="logout()"> Logout </ion-button>
           </ion-col>
         </ion-row>
-  
-        <ng-container *ngIf="userWallets$|async as userWallets; else noUserWallets">
-          <ng-container *ngIf="assetPositions$ | async as assetPositions ;else noAssetPositions">
+
+        <ng-container
+          *ngIf="userWallets$ | async as userWallets; else noUserWallets"
+        >
+          <ng-container
+            *ngIf="
+              assetPositions$ | async as assetPositions;
+              else noAssetPositions
+            "
+          >
             <ion-row>
               <ion-col size="12" size-md="6">
                 <h2 class="ion-margin-start cardTitle">Overview</h2>
@@ -36,7 +70,12 @@
                         <ion-col size="12">
                           <ion-list lines="none" class="resume">
                             <ion-item>
-                              <ion-label> Total </ion-label>
+                              <ion-label>
+                                <h2>Total</h2>
+                                <p class="ion-hide-md-down">
+                                  Positions worth
+                                </p>
+                              </ion-label>
                               <ion-label slot="end" class="ion-text-end">
                                 {{
                                   totalWalletWorth
@@ -45,7 +84,12 @@
                               </ion-label>
                             </ion-item>
                             <ion-item>
-                              <ion-label> Stable </ion-label>
+                              <ion-label>
+                                <h2>Stable</h2>
+                                <p class="ion-hide-md-down">
+                                  Low volatility assets
+                                </p>
+                              </ion-label>
                               <ion-label slot="end" class="ion-text-end">
                                 {{
                                   totalStaleWorth
@@ -61,7 +105,12 @@
                               </ion-label>
                             </ion-item>
                             <ion-item>
-                              <ion-label> Volatile </ion-label>
+                              <ion-label>
+                                <h2>Active</h2>
+                                <p class="ion-hide-md-down">
+                                  High volatility assets
+                                </p>
+                              </ion-label>
                               <ion-label slot="end" class="ion-text-end">
                                 {{
                                   totalWalletWorth - totalStaleWorth
@@ -77,7 +126,12 @@
                               </ion-label>
                             </ion-item>
                             <ion-item>
-                              <ion-label> Initial bag </ion-label>
+                              <ion-label>
+                                <h2>Initial bag</h2>
+                                <p class="ion-hide-md-down">
+                                  Amount invested
+                                </p>
+                              </ion-label>
                               <ion-label slot="end" class="ion-text-end">
                                 {{
                                   totalWalletWorth - totalPL
@@ -86,14 +140,22 @@
                               </ion-label>
                             </ion-item>
                             <ion-item>
-                              <ion-label> Total P/L </ion-label>
+                              <ion-label>
+                                <h2>Total P/L</h2>
+                                <p class="ion-hide-md-down">
+                                  Profit or loss
+                                </p>
+                              </ion-label>
                               <ion-label slot="end" class="ion-text-end">
-                                {{ totalPL | currency : "USD" : "symbol" : "1.2-2"
+                                {{
+                                  totalPL
+                                    | currency : "USD" : "symbol" : "1.2-2"
                                 }}<br />
                                 <small>
                                   {{
                                     (totalPL
-                                      | calculPercent : totalWalletWorth - totalPL
+                                      | calculPercent
+                                        : totalWalletWorth - totalPL
                                       | number : "1.2-2") || 0
                                   }}%
                                 </small>
@@ -113,16 +175,15 @@
                   <ion-card-content>
                     <ion-grid>
                       <ion-row>
-                        <ion-col size="12">
-                          <app-chart2
-                            [data]="chart2Data$|async" />
+                        <ion-col size="12" *ngIf="chart2Data$ | async as chartData">
+                          <app-chart2 [data]="chartData" />
                         </ion-col>
                       </ion-row>
                     </ion-grid>
                   </ion-card-content>
                 </ion-card>
               </ion-col>
-      
+
               <!-- <ion-col size="12" size-md="6">
                 <h2 class="ion-margin-start cardTitle">Add Transaction</h2>
                 <ion-card>
@@ -208,7 +269,7 @@
                 </ion-card>
               </ion-col> -->
             </ion-row>
-      
+
             <ion-row
               class="header-table ion-margin-top ion-padding-top ion-align-items-center ion-hide-md-down"
             >
@@ -217,26 +278,26 @@
               <ion-col size="2" class="ion-text-end">
                 Total<br /><small>Units</small>
               </ion-col>
-              <ion-col size="2" class="ion-text-end"> Initial Invest<br/><small>Average Cost </small></ion-col>
+              <ion-col size="2" class="ion-text-end">
+                Initial Invest<br /><small>Average Cost </small></ion-col
+              >
               <ion-col size="2" class="ion-text-end"> P/L </ion-col>
               <ion-col size="2" class="ion-text-end"> Wallet % </ion-col>
             </ion-row>
-      
+
             <ion-row
               class="header-table ion-margin-top ion-padding-top ion-align-items-center ion-hide-md-up"
             >
-              <ion-col size="6"> 
-                Ticker<br/>
-                <small>
-                  Total
-                </small>
+              <ion-col size="6">
+                Ticker<br />
+                <small> Total </small>
               </ion-col>
-              <ion-col size="6" class="ion-text-end"> 
-                Wallet %<br/>
+              <ion-col size="6" class="ion-text-end">
+                Wallet %<br />
                 <small>P/L</small>
               </ion-col>
             </ion-row>
-      
+
             <ion-row>
               <ion-col size="12">
                 <ion-card>
@@ -262,14 +323,19 @@
                                 <h2>{{ asset.tickerId }}</h2>
                                 <p>
                                   {{
-                                    asset.price | currency : "USD" : "symbol" : "1.2-2"
+                                    asset.price
+                                      | currency : "USD" : "symbol" : "1.2-2"
                                   }}
                                 </p>
                               </ion-label>
                             </ion-col>
                             <ion-col size="2" class="ion-text-end">
                               <ion-text
-                                [color]="asset['24h_change'] >= 0 ? 'success' : 'danger'"
+                                [color]="
+                                  asset['24h_change'] >= 0
+                                    ? 'success'
+                                    : 'danger'
+                                "
                               >
                                 {{ asset["24h_change"] | number : "1.2-2" }}%
                               </ion-text>
@@ -282,21 +348,31 @@
                                     | currency : "USD" : "symbol" : "1.2-2"
                                 }} </b
                               ><br />
-                              <small> {{ asset.units | number : "1.2-2" }} units</small>
+                              <small>
+                                {{ asset.units | number : "1.2-2" }}
+                                units</small
+                              >
                             </ion-col>
                             <ion-col size="2" class="ion-text-end">
-                              {{ asset | initialInvest | currency : "USD" : "symbol" : "1.2-2"}}
+                              {{
+                                asset
+                                  | initialInvest
+                                  | currency : "USD" : "symbol" : "1.2-2"
+                              }}
                               <br />
                               <small>
                                 {{
-                                  asset.averageCost | currency : "USD" : "symbol" : "1.2-2"
+                                  asset.averageCost
+                                    | currency : "USD" : "symbol" : "1.2-2"
                                 }}
                               </small>
                             </ion-col>
                             <ion-col size="2" class="ion-text-end">
                               <ion-text
                                 [color]="
-                                  (asset.plDollars || 0) >= 0 ? 'success' : 'danger'
+                                  (asset.plDollars || 0) >= 0
+                                    ? 'success'
+                                    : 'danger'
                                 "
                               >
                                 {{
@@ -304,7 +380,9 @@
                                     | currency : "USD" : "symbol" : "1.2-2"
                                 }}<br />
                                 <small>
-                                  {{ asset.plPercentage | number : "1.2-2" || 0 }}%
+                                  {{
+                                    asset.plPercentage | number : "1.2-2" || 0
+                                  }}%
                                 </small>
                               </ion-text>
                             </ion-col>
@@ -319,15 +397,18 @@
                             </ion-col>
                           </ion-row>
                         </ion-grid>
-      
+
                         <ion-grid class="ion-hide-md-up">
                           <ion-row class="ion-align-items-center">
                             <ion-col>
                               <ion-label>
-                                <h2><b>{{ asset.tickerId }}</b></h2>
+                                <h2>
+                                  <b>{{ asset.tickerId }}</b>
+                                </h2>
                                 <p>
                                   {{
-                                    asset.price | currency : "USD" : "symbol" : "1.2-2"
+                                    asset.price
+                                      | currency : "USD" : "symbol" : "1.2-2"
                                   }}
                                 </p>
                                 <p>
@@ -336,8 +417,8 @@
                                       asset
                                         | totalPosition
                                         | currency : "USD" : "symbol" : "1.2-2"
-                                    }} </b
-                                  >
+                                    }}
+                                  </b>
                                 </p>
                               </ion-label>
                             </ion-col>
@@ -353,7 +434,9 @@
                               </ion-text>
                               <ion-text
                                 [color]="
-                                  (asset.plDollars || 0) >= 0 ? 'success' : 'danger'
+                                  (asset.plDollars || 0) >= 0
+                                    ? 'success'
+                                    : 'danger'
                                 "
                               >
                                 {{
@@ -361,7 +444,9 @@
                                     | currency : "USD" : "symbol" : "1.2-2"
                                 }}<br />
                                 <small>
-                                  {{ asset.plPercentage | number : "1.2-2" || 0 }}%
+                                  {{
+                                    asset.plPercentage | number : "1.2-2" || 0
+                                  }}%
                                 </small>
                               </ion-text>
                             </ion-col>
@@ -373,19 +458,23 @@
                 </ion-card>
               </ion-col>
             </ion-row>
-
           </ng-container>
-  
+
           <ng-template #noAssetPositions>
             <ion-row>
               <ion-col size="12">
                 <ion-card>
                   <ion-card-content>
-                    <ion-text>
+                    <ion-label>
                       <h2>No asset positions</h2>
                       <p>Click on the button below to add a new transaction</p>
-                    </ion-text>
-                    <ion-button (click)="openAddTx = true">
+                    </ion-label>
+                    <ion-text> </ion-text>
+                    <ion-button
+                      class="ion-margin-top"
+                      (click)="openAddTx = true"
+                    >
+                      <ion-icon slot="start" name="add-outline"></ion-icon>
                       Add Transaction
                     </ion-button>
                   </ion-card-content>
@@ -412,11 +501,18 @@
                     fill="outline"
                     mode="md"
                     type="text"
-                    placeholder="enter a name for your wallet" />
-                  <ion-button 
+                    placeholder="enter a name for your wallet"
+                  />
+                  <ion-button
                     class="ion-margin-top"
                     [disabled]="!walletNameInput.value"
-                    (click)="createItem({ type: 'wallet', payload: $any(walletNameInput.value) })">
+                    (click)="
+                      createItem({
+                        type: 'wallet',
+                        payload: $any(walletNameInput.value)
+                      })
+                    "
+                  >
                     Add Wallet
                   </ion-button>
                 </ion-card-content>
@@ -424,7 +520,6 @@
             </ion-col>
           </ion-row>
         </ng-template>
-
       </ion-grid>
     </ng-container>
 
@@ -441,7 +536,6 @@
         </ion-row>
       </ion-grid>
     </ng-template>
-    
   </ion-content>
 
   <ion-modal [isOpen]="openSelectTicker">
@@ -450,7 +544,9 @@
         <ion-toolbar>
           <ion-title>Search Ticker</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="openSelectTicker = false">Close</ion-button>
+            <ion-button (click)="openSelectTicker = false">
+              <ion-icon name="close-outline"></ion-icon>
+            </ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
@@ -480,7 +576,9 @@
         <ion-toolbar>
           <ion-title>Select Wallet</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="openSelectWallet = false">Close</ion-button>
+            <ion-button (click)="openSelectWallet = false">
+              <ion-icon name="close-outline"></ion-icon>
+            </ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
@@ -504,10 +602,15 @@
           </ion-list>
         </div>
         <ng-template #createBtn>
-          <ion-button (click)="createItem({
-            type: 'wallet',
-            payload: searchBar.value
-          })">create wallet</ion-button>
+          <ion-button
+            (click)="
+              createItem({
+                type: 'wallet',
+                payload: searchBar.value
+              })
+            "
+            >create wallet</ion-button
+          >
         </ng-template>
       </ion-content>
     </ng-template>
@@ -519,7 +622,9 @@
         <ion-toolbar>
           <ion-title>Select Defi</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="openSelectDefi = false">Close</ion-button>
+            <ion-button (click)="openSelectDefi = false">
+              <ion-icon name="close-outline"></ion-icon>
+            </ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
@@ -542,10 +647,15 @@
           </ion-list>
         </div>
         <ng-template #createBtn>
-          <ion-button (click)="createItem({
-            type: 'defiProtocol',
-            payload: searchBar.value
-          })">create defi Protocol</ion-button>
+          <ion-button
+            (click)="
+              createItem({
+                type: 'defiProtocol',
+                payload: searchBar.value
+              })
+            "
+            >create defi Protocol</ion-button
+          >
         </ng-template>
       </ion-content>
     </ng-template>
@@ -557,13 +667,16 @@
         <ion-toolbar>
           <ion-title>Select Network</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="openSelectNetwork = false">Close</ion-button>
+            <ion-button (click)="openSelectNetwork = false">
+              <ion-icon name="close-outline"></ion-icon>
+            </ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
       <ion-content>
         <ion-searchbar
           debounce="500"
+          #searchItem
           (ionInput)="searchNetwork($event.detail.value || '')"
         ></ion-searchbar>
         <ion-list>
@@ -572,107 +685,164 @@
             (click)="selectNetwork(network)"
           >
             <ion-label>
-              <h2>{{ network.id }}</h2>
-              <p>{{ network.name }}</p>
+              <h2>{{ network.name }}</h2>
+              <p>ID {{ network.id }}</p>
             </ion-label>
           </ion-item>
+          <ion-button
+            (click)="
+              selectNetwork({
+                id: searchItem.value + '',
+                name: searchItem.value + ''
+              })
+            "
+            class="ion-margin"
+            *ngIf="networks.length <= 0"
+            >Create new network</ion-button
+          >
         </ion-list>
       </ion-content>
     </ng-template>
   </ion-modal>
 
-  <ion-modal 
-    [isOpen]="openAddTx"
-    (ionModalDidDismiss)="openAddTx = false">
+  <ion-modal [isOpen]="openAddTx" (ionModalDidDismiss)="openAddTx = false">
     <ng-template>
       <ion-header>
         <ion-toolbar>
           <ion-title>Add transaction</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="openAddTx = false">Close</ion-button>
+            <ion-button (click)="openAddTx = false">
+              <ion-icon name="close-outline"></ion-icon>
+            </ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
       <ion-content>
         <form [formGroup]="txForm">
           <ion-grid>
-            <ion-row>
-              <ion-col size="6">
-                <ion-list>
-                  <ion-item (click)="openSelectTicker = true">
-                    <ion-label position="stacked">Ticker</ion-label>
+            <ion-row class="ion-padding-vertical">
+              <ion-col size-xs="12" size-md="6">
+                <ion-list lines="none">
+                  <ion-item
+                    (click)="openSelectTicker = true; searchTicker('eth')"
+                  >
                     <ion-input
-                      [disabled]="true"
-                      formControlName="tickerId"
-                    ></ion-input>
+                      class="ion-margin-top"
+                      label="Ticker *"
+                      labelPlacement="stacked"
+                      fill="outline"
+                      mode="md"
+                      [value]="txForm.value?.tickerId"
+                    />
                   </ion-item>
-                  <ion-item (click)="openSelectWallet = true" formGroupName="wallet">
-                    <ion-label position="stacked">Wallet</ion-label>
+                  <ion-item (click)="openSelectWallet = true">
                     <ion-input
-                      [disabled]="true"
-                      formControlName="displayName"
-                    ></ion-input>
+                      label="Wallet *"
+                      labelPlacement="stacked"
+                      fill="outline"
+                      mode="md"
+                      class="ion-margin-top"
+                      [value]="txForm.value?.wallet?.displayName"
+                    />
                   </ion-item>
-                  <ion-item (click)="openSelectNetwork = true" formGroupName="network">
-                    <ion-label position="stacked">Network</ion-label>
+                  <ion-item
+                    (click)="
+                      openSelectNetwork = true;
+                      (txForm.value?.network?.displayName?.length ?? 0) <= 0
+                        ? searchNetwork('eth')
+                        : null
+                    "
+                  >
                     <ion-input
-                      [disabled]="true"
-                      formControlName="displayName"
+                      label="Network *"
+                      labelPlacement="stacked"
+                      fill="outline"
+                      mode="md"
+                      class="ion-margin-top"
+                      [value]="txForm.value?.network?.displayName"
                     ></ion-input>
                   </ion-item>
                   <ion-item>
-                    <ion-label position="stacked">Notes</ion-label>
-                    <ion-textarea formControlName="notes"></ion-textarea>
+                    <ion-textarea
+                      label="Notes"
+                      labelPlacement="stacked"
+                      fill="outline"
+                      mode="md"
+                      class="ion-margin-top"
+                      formControlName="notes"
+                    />
                   </ion-item>
                 </ion-list>
               </ion-col>
-              <ion-col size="6">
-                <ion-list>
+              <ion-col size-xs="12" size-md="6">
+                <ion-list lines="none">
                   <ion-item>
-                    <ion-label position="stacked">Quantity</ion-label>
                     <ion-input
+                      label="Quantity *"
+                      labelPlacement="stacked"
+                      fill="outline"
+                      mode="md"
+                      class="ion-margin-top"
                       type="number"
                       formControlName="quantity"
-                    ></ion-input>
+                    />
                   </ion-item>
                   <ion-item>
-                    <ion-label position="stacked">Price</ion-label>
                     <ion-input
+                      LABEL="Price *"
+                      labelPlacement="stacked"
+                      fill="outline"
+                      mode="md"
+                      class="ion-margin-top"
                       type="number"
                       formControlName="price"
-                    ></ion-input>
+                    />
                   </ion-item>
                   <ion-item>
-                    <ion-label position="stacked">Fees</ion-label>
-                    <ion-input formControlName="fees" type="number"></ion-input>
-                  </ion-item>
-                  <ion-item (click)="openSelectDefi = true" formGroupName="defiProtocol">
-                    <ion-label position="stacked"
-                      >DeFi Protocol ID</ion-label
-                    >
                     <ion-input
-                      formControlName="displayName"
-                    ></ion-input>
+                      label="Fees"
+                      labelPlacement="stacked"
+                      fill="outline"
+                      mode="md"
+                      class="ion-margin-top"
+                      formControlName="fees"
+                      type="number"
+                    />
+                  </ion-item>
+                  <ion-item (click)="openSelectDefi = true">
+                    <ion-input
+                      label="DeFi Protocol"
+                      labelPlacement="stacked"
+                      fill="outline"
+                      mode="md"
+                      class="ion-margin-top"
+                      [value]="txForm.value?.defiProtocol?.displayName"
+                    />
                   </ion-item>
                 </ion-list>
               </ion-col>
             </ion-row>
           </ion-grid>
+          <ion-text color="medium">
+            <p class="ion-text-center">
+              <small> Item field with * are required </small>
+            </p>
+          </ion-text>
         </form>
       </ion-content>
       <ion-footer>
         <ion-button
           expand="full"
           type="submit"
+          class="ion-no-margin"
           [disabled]="!txForm.valid"
-          (click)="addTx($any($event.target));openAddTx = false;"
+          (click)="addTx($any($event.target)); openAddTx = false"
           >Submit
           {{
-            ((txForm.value.price ?? 0) * (txForm.value.quantity ?? 0) +
-              (txForm.value.fees ?? 0))
-              | currency : "USD" : "symbol" : "1.2-2"
-          }}</ion-button>
-
+            (txForm.value.price ?? 0) * (txForm.value.quantity ?? 0) +
+              (txForm.value.fees ?? 0) | currency : "USD" : "symbol" : "1.2-2"
+          }}</ion-button
+        >
       </ion-footer>
     </ng-template>
   </ion-modal>

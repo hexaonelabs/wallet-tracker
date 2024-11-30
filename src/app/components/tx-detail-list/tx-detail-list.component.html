@@ -134,20 +134,23 @@
       <ion-row>
         <ion-col>
           <ion-label color="medium">
-            <h2>Entities Location</h2>
+            <h2>Assets Location</h2>
           </ion-label>
           <ion-card>
             <ion-card-content>
               <ion-grid *ngFor="let group of entities| keyvalue">
                 <ion-row *ngFor="let value of group.value">
-                  <ion-col size="3">
+                  <ion-col size="2">
                     {{ value.tickerId }}
                   </ion-col>
-                  <ion-col size="3">
+                  <ion-col size="2">
                     {{ value.quantity | number : "1.2-5" }}
                   </ion-col>
                   <ion-col size="3">
                     {{ value.networkId|toChainName|async }}
+                  </ion-col>
+                  <ion-col size="2">
+                    {{ value.walletId }}
                   </ion-col>
                   <ion-col size="3">
                     {{ value.defiProtocolId ? (value.defiProtocolId|toDefiProtocolName|async) : ''}}
@@ -178,10 +181,10 @@
                     </small>
                   </h2>
                   <p>
-                    Price: {{ tx.price | currency : "USD" : "symbol" : "1.2-2" }} 
-                    <span *ngIf="tx.createdAt">
-                      at {{ tx.createdAt | date : "short" }}
-                    </span>
+                    Unit price: {{ tx.price | currency : "USD" : "symbol" : "1.2-2" }}<br/>
+                    <small *ngIf="tx.createdAt">
+                      {{ tx.createdAt | date : "short" }}
+                    </small>
                   </p>
                 </ion-label>
                 <ion-note class="ion-margin-horizontal ion-text-end" slot="end">

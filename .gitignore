@@ -50,3 +50,4 @@ Thumbs.db
 environment.ts
 environment.local.ts
 data.json
+backup-*.json

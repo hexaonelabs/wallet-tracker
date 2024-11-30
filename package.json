@@ -23,6 +23,7 @@
     "@angular/service-worker": "18.2.0",
     "@ionic/angular": "^8.3.2",
     "chart.js": "^4.4.6",
+    "chart.js-plugin-labels-dv": "^5.0.1-beta",
     "chartjs-plugin-datalabels": "^2.2.0",
     "csv-parser": "^3.0.0",
     "lightweight-charts": "^4.2.1",
