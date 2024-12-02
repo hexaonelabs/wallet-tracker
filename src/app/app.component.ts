@@ -57,7 +57,6 @@ import {
   map,
   Observable,
   pairwise,
-  share,
   shareReplay,
   startWith,
   switchMap,
@@ -372,7 +371,7 @@ export class AppComponent {
             )
           : wallets
       ),
-      share()
+      shareReplay()
     );
     // this.selectedWallet$ = this.userWallets$.pipe(
     //   map((wallets) => wallets[0])

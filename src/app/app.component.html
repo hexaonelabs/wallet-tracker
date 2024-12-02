@@ -614,10 +614,18 @@
                 <p *ngIf="wallet.address">{{ wallet.address }}</p>
               </ion-label>
             </ion-item>
+            <ion-text color="medium">
+              <p class="ion-margin">
+                <small>
+                  Type unexisting wallet name to create a new one
+                </small>
+              </p>
+            </ion-text>
           </ion-list>
         </div>
         <ng-template #createBtn>
           <ion-button
+            class="ion-margin"
             (click)="
               createItem({
                 type: 'wallet',
