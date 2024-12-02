@@ -216,9 +216,7 @@ export class DBService {
       return;
     }
     const colRef = collection(this._firestore, this._COLLECTIONS.defiProtocols);
-    const constraints: QueryConstraint[] = [
-      // where('uid', '==', uid)
-    ];
+    const constraints: QueryConstraint[] = [where('uid', '==', uid)];
     const q = query(colRef, ...constraints);
     const sub = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
