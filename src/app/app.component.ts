@@ -350,7 +350,7 @@ export class AppComponent {
           }
         }
       }),
-      shareReplay()
+      shareReplay(1)
     );
     // build userWallets Observable using
     // `_walletFilterValue$` to filter the wallets
