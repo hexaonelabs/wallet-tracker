@@ -373,9 +373,6 @@ export class AppComponent {
       ),
       shareReplay()
     );
-    // this.selectedWallet$ = this.userWallets$.pipe(
-    //   map((wallets) => wallets[0])
-    // );
 
     this.defiProtocols$ = combineLatest([
       this._db.defiProtocols$,
