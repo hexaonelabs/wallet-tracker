@@ -539,17 +539,29 @@
     </ng-container>
 
     <ng-template #authTemplate>
-      <ion-grid class="ion-text-center" fixed>
-        <ion-row>
-          <ion-col>
-            <ion-text>
-              <h1>TXS</h1>
-              <p>Track your transactions</p>
-            </ion-text>
-            <ion-button (click)="login()"> Login </ion-button>
-          </ion-col>
-        </ion-row>
-      </ion-grid>
+      <section id="auth">
+        <ion-grid class="ion-text-center" fixed>
+          <ion-row>
+            <ion-col>
+              <ion-text>
+                <h1>TXS</h1>
+                <ion-text color="medium">
+                  <p class="ion-no-margin ion-margin-bottom">
+                    Better than an Excel sheet, <br/>
+                    all you need to track all your transactions manualy
+                  </p>
+                </ion-text>
+              </ion-text>
+              <ion-button class="ion-margin-top" (click)="login()"> Login with Google </ion-button>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+        <p class="footer">
+          <ion-text color="medium">
+            Made & use by <a href="https://hexaonelabs.com" target="_blank">HexaOneLabs</a>
+          </ion-text>
+        </p>
+      </section>
     </ng-template>
   </ion-content>
 
