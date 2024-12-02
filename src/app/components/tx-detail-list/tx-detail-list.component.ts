@@ -36,6 +36,7 @@ import { ToChainNamePipe } from '../../pipes/to-chain-name/to-chain-name.pipe';
 import { ToDefiProtocolNamePipe } from '../../pipes/to-defiprotocol-name/to-defi-protocol-name.pipe';
 import { ChartComponent } from '../chart/chart.component';
 import { InitialInvestPipe } from '../../pipes/initial-invest/initial-invest.pipe';
+import { TotalPositionPipe } from '../../pipes/total-position/total-position.pipe';
 
 const UIElements = [
   IonHeader,
@@ -74,6 +75,7 @@ const UIElements = [
     ToDefiProtocolNamePipe,
     InitialInvestPipe,
     ChartComponent,
+    TotalPositionPipe,
   ],
 })
 export class TxDetailListComponent {

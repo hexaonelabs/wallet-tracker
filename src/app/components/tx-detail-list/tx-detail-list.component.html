@@ -26,6 +26,22 @@
         <ion-card>
           <ion-card-content>
             <ion-item>
+              <ion-label>
+                Net worth
+              </ion-label>
+              <ion-note slot="end" class="ion-text-end" [color]="
+                  ((asset | totalPosition) || 0) >= 0 ? 'success' : 'danger'
+                "
+              >
+              {{
+                asset
+                  | totalPosition
+                  | currency : "USD" : "symbol" : "1.2-2"
+              }}
+              </ion-note>
+            </ion-item>
+
+            <ion-item>
               <ion-label>Quantity</ion-label>
               <ion-text slot="end" class="ion-text-end">
                 {{ (asset['units']||0) | number : "1.2-5" }}

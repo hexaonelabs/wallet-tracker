@@ -30,6 +30,7 @@ export class DBService {
     userConfig: 'user-config',
     defiProtocols: 'defi-protocols',
   };
+  private readonly _whiteListedUIDs = ['Rty0ZOtCm4PyRJv9ULJqWliZOhm1'];
   private readonly _txs$: BehaviorSubject<Tx[]> = new BehaviorSubject<Tx[]>(
     [] as unknown as Tx[]
   );
@@ -124,10 +125,24 @@ export class DBService {
     ) {
       return;
     }
+    // check if is in white list
+    let maxLimit = 500;
+    if (this._whiteListedUIDs.includes(uid)) {
+      maxLimit = -1;
+    }
+    console.log(
+      `[INFO] Is in white list: ${this._whiteListedUIDs.includes(
+        uid
+      )} with limit to ${maxLimit}`
+    );
     const colRef = collection(this._firestore, this._COLLECTIONS.tx);
     const constraints = [
       where('uid', '==', uid),
-      environment.isProd ? undefined : limit(15),
+      environment.isProd
+        ? maxLimit < 0
+          ? undefined
+          : limit(maxLimit)
+        : limit(15),
       // orderBy('createdAt', 'desc'),
     ].filter(Boolean) as QueryConstraint[];
     const q = query(colRef, ...constraints);

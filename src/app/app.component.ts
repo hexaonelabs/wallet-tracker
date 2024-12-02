@@ -349,7 +349,7 @@ export class AppComponent {
           }
         }
       }),
-      share()
+      shareReplay()
     );
     // build userWallets Observable using
     // `_walletFilterValue$` to filter the wallets
@@ -556,16 +556,15 @@ export class AppComponent {
     };
     console.log({ tx });
     const ionAlert = await new AlertController().create({
-      header: 'Add Transaction',
-      message: 'Are you sure you want to add this transaction?',
-      subHeader: `Ticker: ${tickerId}, Quantity: ${quantity}, Price: ${price}, Fees: ${fees}, Total: ${total}`,
+      header: 'Confirm Transaction',
+      message: `${quantity}x ${tickerId} at ${price} with ${fees} fees for a total of ${total}`,
       buttons: [
         {
           text: 'Cancel',
           role: 'cancel',
         },
         {
-          text: 'Add',
+          text: 'Confirm',
           role: 'ok',
         },
       ],
@@ -767,6 +766,7 @@ export class AppComponent {
 
   async updateUserConfig() {
     const userConfig = await firstValueFrom(this.userConfig$);
+    console.log('updateUserConfig', userConfig);
     const ionAlert = await new AlertController().create({
       header: 'Coingecko API Key',
       message: 'Manage your Coingecko API Key',
