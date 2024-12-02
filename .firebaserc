@@ -1,5 +1,14 @@
 {
   "projects": {
-    "default": "adddemo-bfd9d"
+    "default": "genft-6f456"
+  },
+  "targets": {
+    "genft-6f456": {
+      "hosting": {
+        "txs": [
+          "txs"
+        ]
+      }
+    }
   }
 }

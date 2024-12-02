@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "target": "txs",
     "public": "dist/wallet-tracker/browser",
     "ignore": [
       "firebase.json",
