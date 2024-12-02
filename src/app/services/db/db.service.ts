@@ -30,7 +30,7 @@ export class DBService {
     userConfig: 'user-config',
     defiProtocols: 'defi-protocols',
   };
-  private readonly _whiteListedUIDs = ['Rty0ZOtCm4PyRJv9ULJqWliZOhm1'];
+  private readonly _whiteListedUIDs = ['H5Gzlf9BBCTyCbSUT9TgTHkZZUw1'];
   private readonly _txs$: BehaviorSubject<Tx[]> = new BehaviorSubject<Tx[]>(
     [] as unknown as Tx[]
   );
