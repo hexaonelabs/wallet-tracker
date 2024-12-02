@@ -166,6 +166,8 @@ export class AppComponent {
     } & AssetPosition)[]
   >;
   public readonly userWallets$: Observable<UserWallet[]>;
+  public readonly selectedWallet$: BehaviorSubject<UserWallet | undefined> =
+    new BehaviorSubject(undefined as any);
   public readonly defiProtocols$: Observable<any[]>;
   public readonly userConfig$;
 
@@ -372,6 +374,9 @@ export class AppComponent {
       ),
       share()
     );
+    // this.selectedWallet$ = this.userWallets$.pipe(
+    //   map((wallets) => wallets[0])
+    // );
 
     this.defiProtocols$ = combineLatest([
       this._db.defiProtocols$,
@@ -405,10 +410,21 @@ export class AppComponent {
         map(([prev, curr]) => curr),
         startWith(true)
       ),
+      this.selectedWallet$.asObservable(),
     ]).pipe(
       filter(([txs]) => !!txs),
+      // filter by selected wallet
+      map(([txs, refresh, selectedWallet]) => {
+        return {
+          txs:
+            selectedWallet?.id !== undefined
+              ? txs.filter((tx) => tx.walletId === selectedWallet.id)
+              : txs,
+          refresh,
+        };
+      }),
       // group txs by ticker id and sum the quantity
-      map(([txs, refresh]) => ({
+      map(({ txs, refresh }) => ({
         assetPositions: groupByTicker(txs),
         refresh,
       })),

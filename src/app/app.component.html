@@ -6,7 +6,7 @@
           <ion-col>
             <h1 class="ion-no-margin ion-margin-top">TXS Tracker</h1>
             <p class="ion-no-margin ion-margin-bottom">
-              Tracking on-chain transactions<br />
+              Track your transactions<br />
               <small (click)="updateUserConfig()">
                 <ion-text color="medium">
                   CoinGecko API Key:
@@ -69,6 +69,21 @@
                       <ion-row>
                         <ion-col size="12">
                           <ion-list lines="none" class="resume">
+                            <ion-item>
+                              <ion-select
+                                label="Selected Wallet"
+                                labelPosition="stacked"
+                                interface="popover"
+                                placeholder="Select Wallet"
+                                [value]="null"
+                                (ionChange)="selectedWallet$.next($event.detail.value)">
+                                <ion-select-option [value]="null">All</ion-select-option>
+                                <ion-select-option
+                                  *ngFor="let wallet of userWallets"
+                                  [value]="wallet"
+                                  >{{ wallet.name }}</ion-select-option>
+                              </ion-select>
+                            </ion-item>
                             <ion-item>
                               <ion-label>
                                 <h2>Total</h2>
@@ -528,8 +543,8 @@
         <ion-row>
           <ion-col>
             <ion-text>
-              <h1>Welcome</h1>
-              <p>Please login to continue</p>
+              <h1>TXS</h1>
+              <p>Track your transactions</p>
             </ion-text>
             <ion-button (click)="login()"> Login </ion-button>
           </ion-col>
