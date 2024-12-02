@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { environment } from '../../../environments/environment';
 import { DBService } from '../db/db.service';
 import { Auth, getAuth } from '@angular/fire/auth';
 
@@ -9,8 +8,6 @@ import { Auth, getAuth } from '@angular/fire/auth';
   providedIn: 'root',
 })
 export class CoinsService {
-  private readonly _APIKEY = environment.apiKey;
-
   constructor(
     private readonly _http: HttpClient,
     private readonly _db: DBService,
