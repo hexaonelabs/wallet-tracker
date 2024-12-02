@@ -33,6 +33,7 @@ const importBackup = async () => {
   console.log(`2) Updating data with user uid...`);
   const updatedTxs = txs.map(tx => {
     tx.uid = userID;
+    tx.createdAt = new Date(tx.createdAt);
     return tx;
   });
   const updatedUserWallets = userWallets.map(wallet => {
