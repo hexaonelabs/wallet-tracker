@@ -48,16 +48,16 @@ const importBackup = async () => {
   console.log(`3) Sending data to Firestore...`);
   // batch save
   const batch = writeBatch(db);
-  updatedTxs.forEach(tx => {
-    const docRef = doc(collection(db, 'txs'));
+  updatedTxs.forEach(({ id, ...tx }) => {
+    const docRef = doc(db, 'txs', id);
     batch.set(docRef, tx);
   });
-  updatedUserWallets.forEach(wallet => {
-    const docRef = doc(collection(db, 'user-wallets'));
+  updatedUserWallets.forEach(({ id, ...wallet }) => {
+    const docRef = doc(db, 'user-wallets', id);
     batch.set(docRef, wallet);
   });
-  updatedDefiProtocols.forEach(protocol => {
-    const docRef = doc(collection(db, 'defi-protocols'));
+  updatedDefiProtocols.forEach(({ id, ...protocol }) => {
+    const docRef = doc(db, 'defi-protocols', id);
     batch.set(docRef, protocol);
   });
   console.log(`4) Committing batch...`);
