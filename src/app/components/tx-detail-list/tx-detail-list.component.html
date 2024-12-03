@@ -19,7 +19,7 @@
     </ion-row>
 
     <ion-row>
-      <ion-col size="6">
+      <ion-col size-xs="12" size-md="6">
         <ion-label color="medium">
           <h2 class="ion-margin-start" >Wallet Data</h2>
         </ion-label>
@@ -29,15 +29,12 @@
               <ion-label>
                 Net worth
               </ion-label>
-              <ion-note slot="end" class="ion-text-end" [color]="
-                  ((asset | totalPosition) || 0) >= 0 ? 'success' : 'danger'
-                "
-              >
-              {{
-                asset
-                  | totalPosition
-                  | currency : "USD" : "symbol" : "1.2-2"
-              }}
+              <ion-note slot="end" class="ion-text-end">
+                {{
+                  asset
+                    | totalPosition
+                    | currency : "USD" : "symbol" : "1.2-2"
+                }}
               </ion-note>
             </ion-item>
 
@@ -77,7 +74,7 @@
           </ion-card-content>
         </ion-card>
       </ion-col>
-      <ion-col size="6"> 
+      <ion-col size-xs="12" size-md="6"> 
         <ion-label color="medium">
           <h2>Market changes</h2>
         </ion-label>
