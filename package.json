@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "dev": "ng serve --configuration local",
+    "start": "ng serve --configuration local",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "deploy:app": "ng build && firebase deploy --only hosting",
