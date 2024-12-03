@@ -13,7 +13,7 @@
   }
 
   .header-table {
-    padding-left: 5.5rem;
+    padding-left: 4.5rem;
     padding-right: 3rem;
     position: sticky;
     top: 0;
@@ -29,6 +29,11 @@
 
   ion-card {
     margin-top: 0.25rem;
+
+    ion-card-content.assetsContainer {
+      padding-left: 0;
+      padding-right: 0;
+    }
   }
 
   section#auth {
