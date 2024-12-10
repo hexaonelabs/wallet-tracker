@@ -61,6 +61,18 @@
             "
           >
             <ion-row>
+              <ion-col size="12">
+                <ion-card>
+                  <ion-card-content>
+                    <app-chart
+                      *ngIf="portfolioGraphData$ | async as portfolioGraphData"
+                      [data]="portfolioGraphData"
+                      [totalWorth]="totalWalletWorth"
+                    />
+                  </ion-card-content>
+                </ion-card>
+              </ion-col>
+
               <ion-col size="12" size-md="6">
                 <h2 class="ion-margin-start cardTitle">Overview</h2>
                 <ion-card>
@@ -76,20 +88,24 @@
                                 interface="popover"
                                 placeholder="Select Wallet"
                                 [value]="null"
-                                (ionChange)="selectedWallet$.next($event.detail.value)">
-                                <ion-select-option [value]="null">All</ion-select-option>
+                                (ionChange)="
+                                  selectedWallet$.next($event.detail.value)
+                                "
+                              >
+                                <ion-select-option [value]="null"
+                                  >All</ion-select-option
+                                >
                                 <ion-select-option
                                   *ngFor="let wallet of userWallets"
                                   [value]="wallet"
-                                  >{{ wallet.name }}</ion-select-option>
+                                  >{{ wallet.name }}</ion-select-option
+                                >
                               </ion-select>
                             </ion-item>
                             <ion-item>
                               <ion-label>
                                 <h2>Total</h2>
-                                <p class="ion-hide-md-down">
-                                  Positions worth
-                                </p>
+                                <p class="ion-hide-md-down">Positions worth</p>
                               </ion-label>
                               <ion-label slot="end" class="ion-text-end">
                                 {{
@@ -143,9 +159,7 @@
                             <ion-item>
                               <ion-label>
                                 <h2>Initial bag</h2>
-                                <p class="ion-hide-md-down">
-                                  Amount invested
-                                </p>
+                                <p class="ion-hide-md-down">Amount invested</p>
                               </ion-label>
                               <ion-label slot="end" class="ion-text-end">
                                 {{
@@ -157,9 +171,7 @@
                             <ion-item>
                               <ion-label>
                                 <h2>Total P/L</h2>
-                                <p class="ion-hide-md-down">
-                                  Profit or loss
-                                </p>
+                                <p class="ion-hide-md-down">Profit or loss</p>
                               </ion-label>
                               <ion-label slot="end" class="ion-text-end">
                                 {{
@@ -190,8 +202,43 @@
                   <ion-card-content>
                     <ion-grid>
                       <ion-row>
-                        <ion-col size="12" *ngIf="chart2Data$ | async as chartData">
-                          <app-chart2 [data]="chartData" />
+                        <ion-col size="12">
+                          <swiper-container>
+                            <!-- <swiper-slide>
+                              <app-chart
+                                *ngIf="
+                                  portfolioGraphData$
+                                    | async as portfolioGraphData
+                                "
+                                [data]="portfolioGraphData"
+                              />
+                            </swiper-slide> -->
+                            <swiper-slide>
+                              <ion-text>
+                                <p>
+                                  <small>
+                                    Assets distribution by value
+                                  </small>
+                                </p>
+                              </ion-text>
+                              <app-chart2
+                                *ngIf="chart2Data$ | async as chartData"
+                                [data]="chartData"
+                              />
+                            </swiper-slide>
+                            <swiper-slide><ion-text>
+                              <p>
+                                <small>
+                                  Assets distribution by market cap.
+                                </small>
+                              </p>
+                            </ion-text>
+                              <app-chart2
+                                *ngIf="chartMarketCapData$ | async as chartData"
+                                [data]="chartData"
+                              />
+                            </swiper-slide>
+                          </swiper-container>
                         </ion-col>
                       </ion-row>
                     </ion-grid>
@@ -547,18 +594,21 @@
                 <h1>TXS</h1>
                 <ion-text color="medium">
                   <p class="ion-no-margin ion-margin-bottom">
-                    Better than an Excel sheet, <br/>
+                    Better than an Excel sheet, <br />
                     all you need to track your transactions manualy
                   </p>
                 </ion-text>
               </ion-text>
-              <ion-button class="ion-margin-top" (click)="login()"> Login with Google </ion-button>
+              <ion-button class="ion-margin-top" (click)="login()">
+                Login with Google
+              </ion-button>
             </ion-col>
           </ion-row>
         </ion-grid>
         <p class="footer">
           <ion-text color="medium">
-            Made & use by <a href="https://hexaonelabs.com" target="_blank">HexaOneLabs</a>
+            Made & use by
+            <a href="https://hexaonelabs.com" target="_blank">HexaOneLabs</a>
           </ion-text>
         </p>
       </section>
@@ -628,9 +678,7 @@
             </ion-item>
             <ion-text color="medium">
               <p class="ion-margin">
-                <small>
-                  Type unexisting wallet name to create a new one
-                </small>
+                <small> Type unexisting wallet name to create a new one </small>
               </p>
             </ion-text>
           </ion-list>

@@ -12,6 +12,7 @@ import { ColorType, IChartApi, createChart } from 'lightweight-charts';
 export class ChartComponent {
   public price = 0;
   public time = new Date().toLocaleString();
+  @Input() totalWorth = 0;
   @Input() set data(data: number[]) {
     if (this.chartElement) {
       this.chartElement.remove();
@@ -25,7 +26,7 @@ export class ChartComponent {
     if (!el) {
       return;
     }
-    this.price = data[data.length - 1] || 0;
+
     this.chartElement = createChart(el, {
       width: 800,
       height: 400,
@@ -87,11 +88,16 @@ export class ChartComponent {
         ? new Date(param.time).toLocaleString()
         : new Date().toLocaleString();
       this.price =
-        param.time && (param.seriesData as Map<any, any>).get(lineSeries)?.value
+        param.time &&
+        (param.seriesData as Map<any, any>).get(lineSeries)?.value !== undefined
           ? (param.seriesData as Map<any, any>).get(lineSeries)?.value
-          : data?.[data.length - 1];
+          : this.totalWorth || data?.[data.length - 1] || 0;
     };
     this.chartElement.subscribeCrosshairMove(updateLegend);
+    // use setTimeout to handle input value from other component input
+    setTimeout(() => {
+      this.price = this.totalWorth || data[data.length - 1] || 0;
+    });
   }
   public chartElement!: IChartApi;
 

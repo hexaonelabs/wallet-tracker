@@ -44,6 +44,7 @@ export const addMarketDatas = async <T>(
 ) => {
   const manualIds = [
     { tickerId: 'btc', apiId: 'bitcoin' },
+    { tickerId: 'eth', apiId: 'ethereum' },
     { tickerId: 'jup', apiId: 'jupiter-exchange-solana' },
     { tickerId: 'velo', apiId: 'velodrome-finance' },
     { tickerId: 'op', apiId: 'optimism' },
@@ -166,4 +167,22 @@ export const isStableTicker = (tickerId: string) => {
   ];
   const isStableTicker = stableTicker.includes(tickerId);
   return isStableTicker;
+};
+
+export const formatDataForChart = (
+  data: number[]
+): { time: number; value: number }[] => {
+  const interval = 1000 * 60 * 30; // Intervalle de 30 minutes en millisecondes
+  const now = new Date();
+
+  // Ajuster le startTime à la prochaine heure pleine ou demi-heure
+  const minutes = now.getMinutes();
+  const nextHalfHour = minutes < 30 ? 30 : 60;
+  now.setMinutes(nextHalfHour, 0, 0);
+  const startTime = now.getTime() - interval * (data.length - 1);
+
+  return data.map((value, index) => {
+    const time = new Date(startTime + interval * index).getTime();
+    return { time, value };
+  });
 };

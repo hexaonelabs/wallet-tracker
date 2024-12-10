@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import {
   Auth,
   authState,
@@ -95,6 +96,9 @@ import {
 import { addIcons } from 'ionicons';
 import { Chart2Component } from './components/chart2/chart2.component';
 import { InitialInvestPipe } from './pipes/initial-invest/initial-invest.pipe';
+import { TotalWorthGraphService } from './services/total-worth-graph/total-worth-graph.service';
+import { ChartComponent } from './components/chart/chart.component';
+import { register } from 'swiper/element/bundle';
 
 const UIElements = [
   IonApp,
@@ -130,6 +134,8 @@ const UIElements = [
   IonFooter,
 ];
 
+register();
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -145,9 +151,11 @@ const UIElements = [
     CalculPercentPipe,
     InitialInvestPipe,
     Chart2Component,
+    ChartComponent,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class AppComponent {
   public totalWalletWorth = 0;
@@ -169,6 +177,7 @@ export class AppComponent {
     new BehaviorSubject(undefined as any);
   public readonly defiProtocols$: Observable<any[]>;
   public readonly userConfig$;
+  public readonly portfolioGraphData$: Observable<number[]>;
 
   public readonly txForm = new FormGroup({
     tickerId: new FormControl('', Validators.required),
@@ -201,6 +210,10 @@ export class AppComponent {
   >(undefined);
   public openSelectNetwork: boolean = false;
   public chart2Data$: Observable<{ labels: string[]; datasets: number[] }>;
+  public chartMarketCapData$: Observable<{
+    labels: string[];
+    datasets: number[];
+  }>;
   public readonly alertOptionsButtons: AlertButton[] = [
     {
       text: 'Refresh',
@@ -253,7 +266,8 @@ export class AppComponent {
     private readonly _db: DBService,
     private readonly _modalCtrl: ModalController,
     private readonly _coinsService: CoinsService,
-    private readonly _toastCtrl: ToastController
+    private readonly _toastCtrl: ToastController,
+    private readonly _portfolioGraphService: TotalWorthGraphService
   ) {
     addIcons({
       downloadOutline,
@@ -502,6 +516,51 @@ export class AppComponent {
         return valuesData;
       }),
       shareReplay()
+    );
+
+    this.portfolioGraphData$ = this.assetPositions$.pipe(
+      filter((assetPositions) => assetPositions?.length > 0),
+      switchMap((assetPositions) => {
+        return this._portfolioGraphService.getPortfolioHistory$(
+          assetPositions,
+          7
+        );
+      }),
+      map((data) => {
+        return data.map((item) => {
+          return item.value;
+        });
+      }),
+      shareReplay()
+    );
+
+    this.chartMarketCapData$ = this.assetPositions$.pipe(
+      filter((assetPositions) => assetPositions?.length > 0),
+      map((assetPositions) => {
+        return assetPositions
+          .filter((a) => a.marketCap !== undefined && a.marketCap > 0)
+          .reduce(
+            (p, c) => {
+              // check market cap and add to the correct label
+              switch (true) {
+                case (c.marketCap ?? 0) < 250000000:
+                  p.datasets[0] += c.total ?? 0;
+                  break;
+                case (c.marketCap ?? 0) < 1000000000:
+                  p.datasets[1] += c.total ?? 0;
+                  break;
+                case (c.marketCap ?? 0) >= 1000000000:
+                  p.datasets[2] += c.total ?? 0;
+                  break;
+              }
+              return p;
+            },
+            {
+              labels: ['Low Cap.', 'Middle Cap.', 'Large Cap.'],
+              datasets: [0, 0, 0],
+            }
+          );
+      })
     );
   }
 

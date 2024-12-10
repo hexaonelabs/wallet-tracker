@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { combineLatest, firstValueFrom, map, Observable } from 'rxjs';
 import { DBService } from '../db/db.service';
 import { Auth, getAuth } from '@angular/fire/auth';
 
@@ -84,5 +84,53 @@ export class CoinsService {
       }
     });
     return valueFromList;
+  }
+
+  get7DaysHistoryData$(tickerId: string) {
+    return combineLatest([this.getDataMarket([tickerId])]).pipe(
+      map(([data]) => {
+        if (!data) {
+          return { prices: [] };
+        }
+        console.log('>>>', data);
+
+        return data
+          .find((c: { id: string }) => c.id === tickerId)
+          .sparkline_in_7d.price.map((price: number, index: number) => [
+            new Date().getTime() - (7 - index) * 24 * 60 * 60 * 1000,
+            price,
+          ]);
+      })
+    );
+  }
+
+  getHistoryData$(tickerId: string, days: number) {
+    // check if data is available in local storage and last updated less than 30 minutes
+    const coinHistory = localStorage.getItem(`coin-history-${tickerId}`);
+    if (coinHistory) {
+      const { timestamp, data } = JSON.parse(coinHistory);
+      const now = new Date().getTime();
+      if (now - timestamp < 30 * 60 * 1000) {
+        // return observable from local storage
+        return new Observable<{ prices: [number, number][] }>((observer) => {
+          observer.next(data);
+          observer.complete();
+        });
+      }
+    }
+    const url = `https://api.coingecko.com/api/v3/coins/${tickerId}/market_chart?vs_currency=usd&days=${days}`;
+    const response = this._http.get<{ prices: [number, number][] }>(url);
+    // save result to local storage
+    firstValueFrom(response).then((result) => {
+      localStorage.setItem(
+        `coin-history-${tickerId}`,
+        JSON.stringify({
+          timestamp: new Date().getTime(),
+          data: result,
+        })
+      );
+    });
+    // returh observable response
+    return response;
   }
 }
