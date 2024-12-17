@@ -465,7 +465,18 @@
                             <ion-col>
                               <ion-label>
                                 <h2>
-                                  <b>{{ asset.tickerId }}</b>
+                                  <b>{{ asset.tickerId }}</b> 
+                                  <small class="ion-padding-start">
+                                    <ion-text
+                                    [color]="
+                                      asset['24h_change'] >= 0
+                                        ? 'success'
+                                        : 'danger'
+                                    "
+                                  >
+                                    {{ asset["24h_change"] | number : "1.2-2" }}%
+                                  </ion-text>
+                                  </small>
                                 </h2>
                                 <p>
                                   {{
