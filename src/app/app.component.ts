@@ -478,6 +478,10 @@ export class AppComponent {
           ? assetPositions
           : (undefined as unknown as AssetPosition[])
       ),
+      // exclude 0 total
+      map((assetPositions) =>
+        assetPositions?.filter((asset: AssetPosition) => asset.total > 0)
+      ),
       shareReplay()
     ) as Observable<({ txs: Tx[] } & AssetPosition)[]>; // cast to the correct type
 
