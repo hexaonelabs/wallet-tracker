@@ -48,6 +48,7 @@ export const addMarketDatas = async <T>(
     { tickerId: 'jup', apiId: 'jupiter-exchange-solana' },
     { tickerId: 'velo', apiId: 'velodrome-finance' },
     { tickerId: 'op', apiId: 'optimism' },
+    { tickerId: 'hype', apiId: 'hyperliquid' },
   ];
   const tickerIds = assetPositions.map((asset) => asset.tickerId);
   const coinsList = await _coinsService.getAllCoinsId();
