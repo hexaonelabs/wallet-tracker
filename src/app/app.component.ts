@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
+import { UpdateComponent } from './components/app-update/app-update.component';
 
 @Component({
   standalone: true,
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
-  imports: [IonApp, IonRouterOutlet],
+  imports: [IonApp, IonRouterOutlet, UpdateComponent],
 })
 export class AppComponent implements OnInit {
   themeIsDark = false;
