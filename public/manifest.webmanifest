@@ -1,7 +1,7 @@
 {
   "name": "wallet-tracker",
   "short_name": "wallet-tracker",
-  "theme_color": "#1976d2",
+  "theme_color": "#5d62ee",
   "background_color": "#fafafa",
   "display": "standalone",
   "scope": "./",

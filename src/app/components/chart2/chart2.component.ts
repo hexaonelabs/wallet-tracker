@@ -37,11 +37,11 @@ export class Chart2Component {
       );
       // limit the data to 5 elements & add the rest to 'others'
       const labelsLimited = [
-        ...data.labels.slice(0, 5),
-        data.labels.length > 5 ? 'Others' : null,
+        ...data.labels.slice(0, 4),
+        data.labels.length > 4 ? 'Others' : null,
       ].filter(Boolean) as string[];
       const dataLimited = [
-        ...dataAsPercentage.slice(0, 5),
+        ...dataAsPercentage.slice(0, 4),
         dataAsPercentage.slice(9).reduce((acc, curr) => acc + curr, 0),
       ];
       // build chart
@@ -55,7 +55,7 @@ export class Chart2Component {
               backgroundColor: [
                 // generate color with descending opacity
                 ...labelsLimited.map(
-                  (_, index) => `rgba(93,98,238, ${1 - index * 0.25})`
+                  (_, index) => `rgba(93,98,238, ${1 - index * 0.2})`
                 ),
               ],
               hoverOffset: 4,
