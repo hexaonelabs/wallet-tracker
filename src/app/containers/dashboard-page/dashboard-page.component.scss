@@ -1,0 +1,14 @@
+:host {
+  ion-content {
+    position: relative;
+  }
+}
+
+ion-modal {
+  ion-searchbar {
+    position: sticky;
+    top: 0;
+    background: var(--ion-background-color);
+    z-index: 2;
+  }
+}

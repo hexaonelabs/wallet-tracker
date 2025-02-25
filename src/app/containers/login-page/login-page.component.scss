@@ -1,0 +1,27 @@
+:host {
+  section#auth {
+    height: 100%;
+    
+    h1 {
+      font-size: 3rem;
+      font-weight: 800;
+    }
+    
+    ion-grid {
+      height: 100%;
+      max-width: 500px;
+      margin: auto;
+
+      > ion-row:first-child {
+        height: 100%;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+    ion-button {display: block;}
+  }
+
+  .footer {
+    position: absolute;
+  }
+}

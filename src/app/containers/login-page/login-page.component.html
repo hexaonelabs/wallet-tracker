@@ -1,0 +1,36 @@
+<ion-content>
+  <section id="auth">
+    <ion-grid class="ion-text-center" fixed>
+      <ion-row>
+        <ion-col>
+          <ion-text>
+            <h1>TXS</h1>
+          </ion-text>
+          <div class="ion-margin-bottom">
+            <ion-text color="medium">
+              <p class="ion-no-margin ion-margin-bottom">
+                Better than an Excel sheet, <br />
+                all you need to track your transactions manualy
+              </p>
+            </ion-text>
+          </div>
+          <ion-button class="ion-margin-top" (click)="login('google')">
+            Login with Google
+          </ion-button>
+          <ion-button (click)="login('email')">
+            Login with Email & Password
+          </ion-button>
+          <ion-button fill="clear" class="ion-margin-top" (click)="register()">
+            Create account with Email & Password
+          </ion-button>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+    <p class="footer">
+      <ion-text color="medium">
+        Made & use by
+        <a href="https://hexaonelabs.com" target="_blank">HexaOneLabs</a>
+      </ion-text>
+    </p>
+  </section>
+</ion-content>

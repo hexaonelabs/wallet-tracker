@@ -13,13 +13,17 @@
 <ion-content>
   <ion-grid fixed>
     <ion-row *ngIf="asset.sparkline7d?.price as sparkline7d">
-      <ion-col>
-        <app-chart [data]="sparkline7d" />
+      <ion-col class="ion-padding-vertical">
+        <ion-card>
+          <ion-card-content>
+            <app-chart [data]="sparkline7d" />
+          </ion-card-content>
+        </ion-card>
       </ion-col>
     </ion-row>
 
     <ion-row>
-      <ion-col size-xs="12" size-md="6">
+      <ion-col size-xs="12" size-md="6" class="ion-padding-vertical">
         <ion-label color="medium">
           <h2 class="ion-margin-start" >Wallet Data</h2>
         </ion-label>
@@ -29,13 +33,13 @@
               <ion-label>
                 Net worth
               </ion-label>
-              <ion-note slot="end" class="ion-text-end">
+              <ion-text slot="end" class="ion-text-end">
                 {{
                   asset
                     | totalPosition
                     | currency : "USD" : "symbol" : "1.2-2"
                 }}
-              </ion-note>
+              </ion-text>
             </ion-item>
 
             <ion-item>
@@ -74,7 +78,7 @@
           </ion-card-content>
         </ion-card>
       </ion-col>
-      <ion-col size-xs="12" size-md="6"> 
+      <ion-col size-xs="12" size-md="6" class="ion-padding-vertical"> 
         <ion-label color="medium">
           <h2>Market changes</h2>
         </ion-label>
@@ -107,7 +111,7 @@
           </ion-card-content>
         </ion-card>
       </ion-col>
-      <ion-col size-xs="12" size-md="6">
+      <ion-col size-xs="12" size-md="6" class="ion-padding-vertical">
         <ion-label color="medium">
           <h2 class="ion-margin-start" >Market Data</h2>
         </ion-label>
@@ -145,7 +149,7 @@
     
     <ng-container *ngIf="txsLocation$ | async as entities">
       <ion-row>
-        <ion-col>
+        <ion-col class="ion-padding-vertical">
           <ion-label color="medium">
             <h2>Assets Location</h2>
           </ion-label>
@@ -177,7 +181,7 @@
     </ng-container>
 
     <ion-row>
-      <ion-col>
+      <ion-col class="ion-padding-vertical">
         <ion-label color="medium">
           <h2>Transactions</h2>
         </ion-label>

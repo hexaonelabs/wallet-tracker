@@ -1,10 +1,67 @@
-/* You can add global styles to this file, and also import other style files */
+/* (Optional) This is added to prevent the flashing that happens when toggling between palettes */
+ion-item {
+  --transition: none;
+}
+
+ion-list.resume ion-label {
+  font-weight: bolder;
+  p {
+    font-weight: normal;
+  }
+}
+ion-item,
+ion-list {
+  background: transparent !important;
+  --background: transparent !important;
+  // --border-color: red!important;
+}
+
+.header-table {
+  padding-left: 4.5rem;
+  padding-right: 3rem;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  // background: var(--ion-background-color);
+}
+
+.cardTitle {
+  font-size: 60%;
+  color: var(--ion-color-medium);
+  margin-bottom: 0;
+}
+
+ion-card {
+  margin-top: 0.25rem;
+
+  ion-card-content.assetsContainer {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+.footer {
+
+  bottom: 0;
+  width: 100%;
+  margin: auto;
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.75rem;
+}
+
 .full-page-modal {
   --width: 100%;
   --height: 100%;
   --border-radius: 0;
+  --background: var(--ion-background-color)!important;
 }
 
 a#tv-attr-logo {
   display: none;;
+}
+
+
+ion-toolbar {
+  padding: 0!important;
 }

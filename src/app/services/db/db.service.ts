@@ -57,7 +57,7 @@ export class DBService {
   constructor(private readonly _firestore: Firestore) {}
 
   async loadUserData(uid: string) {
-    this._loadConfig(uid);
+    await this._loadConfig(uid);
     this._loadTxs(uid);
     this._loadUserWallets(uid);
     this._loadDefiProtocols(uid);
@@ -243,17 +243,24 @@ export class DBService {
       this._firestore,
       this._COLLECTIONS.userConfig + `/${uid}`
     );
-    const sub = onSnapshot(docRef, (snapshot) => {
-      if (!snapshot.exists()) {
-        this._userConfig$.next(null);
-        return;
-      }
-      const data = {
-        ...snapshot.data(),
-        id: snapshot.id,
-      } as { coingeckoApiKey: string; id: string };
-      this._userConfig$.next(data);
+    await new Promise((resolve) => {
+      const sub = onSnapshot(docRef, (snapshot) => {
+        if (!snapshot.exists()) {
+          this._userConfig$.next(null);
+          resolve(null);
+          return;
+        }
+        const data = {
+          ...snapshot.data(),
+          id: snapshot.id,
+        } as { coingeckoApiKey: string; id: string };
+        this._userConfig$.next(data);
+        resolve(data);
+      });
+      this._subscriptions.push({
+        collection: this._COLLECTIONS.userConfig,
+        sub,
+      });
     });
-    this._subscriptions.push({ collection: this._COLLECTIONS.userConfig, sub });
   }
 }

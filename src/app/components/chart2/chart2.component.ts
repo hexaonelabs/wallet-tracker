@@ -35,13 +35,13 @@ export class Chart2Component {
       const dataAsPercentage = data.datasets.map(
         (value) => (value / totalWalletWorth) * 100
       );
-      // limit the data to 9 elements & add the rest to 'others'
+      // limit the data to 5 elements & add the rest to 'others'
       const labelsLimited = [
-        ...data.labels.slice(0, 9),
-        data.labels.length > 9 ? 'Others' : null,
+        ...data.labels.slice(0, 5),
+        data.labels.length > 5 ? 'Others' : null,
       ].filter(Boolean) as string[];
       const dataLimited = [
-        ...dataAsPercentage.slice(0, 9),
+        ...dataAsPercentage.slice(0, 5),
         dataAsPercentage.slice(9).reduce((acc, curr) => acc + curr, 0),
       ];
       // build chart
@@ -52,6 +52,14 @@ export class Chart2Component {
           datasets: [
             {
               data: dataLimited,
+              backgroundColor: [
+                // generate color with descending opacity
+                ...labelsLimited.map(
+                  (_, index) => `rgba(93,98,238, ${1 - index * 0.25})`
+                ),
+              ],
+              hoverOffset: 4,
+              borderWidth: 0,
             },
           ],
         },

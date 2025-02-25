@@ -1,13 +1,20 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, Input } from '@angular/core';
-import { ColorType, IChartApi, createChart } from 'lightweight-charts';
+import { IonText } from '@ionic/angular/standalone';
+import {
+  ColorType,
+  IChartApi,
+  LineStyle,
+  LineType,
+  createChart,
+} from 'lightweight-charts';
 
 @Component({
   standalone: true,
   selector: 'app-chart',
   templateUrl: './chart.component.html',
   styleUrls: ['./chart.component.scss'],
-  imports: [CommonModule],
+  imports: [CommonModule, IonText],
 })
 export class ChartComponent {
   public price = 0;
@@ -67,8 +74,8 @@ export class ChartComponent {
     function formatDataForChart(
       data: number[]
     ): { time: number; value: number }[] {
-      const interval = 1000 * 60 * 30; // Intervalle de 30 minutes en millisecondes
-      const startTime = Date.now() - interval * (data.length - 1);
+      const interval = 1000 * 60 * 60; // Intervalle de 30 minutes en millisecondes
+      const startTime = Date.now() - interval * data.length;
 
       return data.map((value, index) => {
         const time = new Date(startTime + interval * index).getTime();
@@ -82,6 +89,14 @@ export class ChartComponent {
       // base on past 7 days starting from now with 30 minutes interval
       formattedData as any
     );
+    lineSeries.applyOptions({
+      lineStyle: LineStyle.Solid,
+      lineType: LineType.Simple,
+      lineWidth: 3,
+      baseLineWidth: 3,
+      color: '#5d62ee',
+      baseLineColor: '#5d62ee',
+    });
     //  manage legend
     const updateLegend = (param: any) => {
       this.time = param.time
