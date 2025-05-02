@@ -16,7 +16,7 @@ export class TotalWorthGraphService {
   constructor(private readonly _coinService: CoinsService) {}
 
   getPortfolioHistory$(
-    assets: ({ txs: Tx[] } & AssetPosition)[],
+    assets: AssetPosition[],
     days: number = 30
   ): Observable<PortfolioData[]> {
     const endDate = new Date();
@@ -24,22 +24,29 @@ export class TotalWorthGraphService {
 
     // Créer un tableau d'observables pour chaque cryptomonnaie
     const observables = assets.map(
-      ({ total, sparkline7d, txs, units }) => {
+      ({ sparkline7d, units }) => {
         const prices = {
           prices: formatDataForChart(sparkline7d?.price || []).map((e) => [
             e.time,
             e.value,
           ]) as [number, number][],
         };
-        const result = this._calculateCoinValue(
-          prices,
-          units,
-          startDate,
-          endDate,
-          txs
-        );
-        console.log('result', { prices, result });
 
+        const result = prices.prices
+          .map(([timestamp, price]: [number, number]) => {
+            const date = new Date(timestamp);
+            if (
+              date.getTime() >= startDate.getTime() &&
+              date.getTime() <= endDate.getTime()
+            ) {
+              return {
+                date: date.toISOString(),
+                value: price * units,
+              };
+            }
+            return null;
+          })
+          .filter((data) => data !== null);
         // return as Observable
         return of(result);
       }

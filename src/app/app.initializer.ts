@@ -1,24 +1,23 @@
 import { APP_INITIALIZER } from '@angular/core';
-import { Auth } from '@angular/fire/auth';
+import { Auth, authState, User } from '@angular/fire/auth';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { DBService } from './services/db/db.service';
 import { AlertController, ToastController } from '@ionic/angular/standalone';
+import { APIService } from './services/api.service';
 
 export const provideInitializer = () => ({
   provide: APP_INITIALIZER,
-  useFactory: listenUserState,
+  useFactory: initializeCoinGeckoAPI_KEY,
   multi: true,
-  deps: [Auth, DBService, Router],
+  deps: [Auth, APIService, Router],
 });
 
-const listenUserState = (auth: Auth, db: DBService, router: Router) => () =>
-  new Promise(async (resolve: (r: boolean) => void) => {
-    // listen to the user state
-    auth.onAuthStateChanged(async (user) => {
+const initializeCoinGeckoAPI_KEY =
+  (auth: Auth, api: APIService, router: Router) => () =>
+    new Promise(async (resolve: (r: boolean) => void) => {
+      const user: User | null = await firstValueFrom(authState(auth));
       if (!user) {
         console.log('User is not authenticated');
-        await db.clearData();
         // redirect to the login page if is not on the login page
         if (!router.url.includes('auth')) {
           router.navigate(['/auth']);
@@ -27,10 +26,8 @@ const listenUserState = (auth: Auth, db: DBService, router: Router) => () =>
         return;
       }
       // load the data
-      await db.loadUserData(user.uid);
-      const userConfig = await firstValueFrom(db.userConfig$);
+      const userConfig = await firstValueFrom(api.userConfig$);
       console.log('User is authenticated', { user, userConfig });
-
       if (
         // user don't have config
         !userConfig ||
@@ -81,7 +78,7 @@ const listenUserState = (auth: Auth, db: DBService, router: Router) => () =>
             await toast.present();
             return false;
           }
-          await db.updateUserConfig(user.uid, {
+          await api.updateUserConfig(user.uid, {
             coingeckoApiKey: data.values.apiKey,
           });
           return true;
@@ -102,4 +99,3 @@ const listenUserState = (auth: Auth, db: DBService, router: Router) => () =>
       // resolve the promise on the first event state change
       resolve(true);
     });
-  });

@@ -1,23 +1,21 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { DBService } from '../../services/db/db.service';
 import { firstValueFrom } from 'rxjs';
+import { APIService } from '../../services/api.service';
 
 @Pipe({
   name: 'toDefiProtocolName',
   standalone: true,
 })
 export class ToDefiProtocolNamePipe implements PipeTransform {
-  constructor(private readonly _dbService: DBService) {}
+  constructor(private readonly _api: APIService) {}
 
   async transform(protocolId?: string): Promise<string> {
     if (!protocolId) {
       return 'protocol not set';
     }
-    const p = await firstValueFrom(this._dbService.defiProtocols$);
-    console.log(p);
-
+    const p = await firstValueFrom(this._api.defiProtocols$);
     return (
-      p.find((protocol) => protocol.id === protocolId)?.name ??
+      p?.find((protocol) => protocol.id === protocolId)?.name ??
       'protocol not found'
     );
   }

@@ -26,10 +26,25 @@ export interface ChainIds {
 }
 
 export interface AssetPosition {
+  id: string; // database object ID
+  uid: string; // user ID
+  walletId: string; // wallet ID
+  networkId: string; // network ID
+  defiProtocolId?: string; // defi protocol ID
+
+  // Asset data
   tickerId: string;
   units: number;
-  price: number;
-  '24h_change': number;
+  initialInvestedAmountUSD: number;
+  averageCost: number;
+
+  // meta & market data
+  logo?: string;
+  totalValueUSD?: number;
+  currentPrice?: number;
+  plDollars?: number;
+  plPercentage?: number;
+  '24h_change'?: number;
   '7d_change'?: number;
   '30d_change'?: number;
   '1h_change'?: number;
@@ -39,9 +54,4 @@ export interface AssetPosition {
   maxSupply?: number;
   totalSupply?: number;
   sparkline7d?: { price: number[] };
-  total: number;
-  averageCost: number;
-  plDollars: number;
-  plPercentage: number;
-  logo?: string;
 }

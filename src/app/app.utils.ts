@@ -1,44 +1,38 @@
-import { AssetPosition, Tx } from './interfaces';
+import { AssetPosition } from './interfaces';
 import { CoinsService } from './services/coins/coins.service';
-import { AveragePipe } from './pipes/average/average.pipe';
-import { PLPipe } from './pipes/pl/pl.pipe';
-import { DBService } from './services/db/db.service';
-import { CalculPercentPipe } from './pipes/calcul-percent/calcul-percent.pipe';
 
-export const groupByTicker = (
-  txs: Tx[]
-): Record<string, AssetPosition & { txs: Tx[] }> => {
-  return txs.reduce((acc, tx) => {
-    const tickerId = tx.tickerId.toLocaleUpperCase();
-    if (!acc[tickerId]) {
-      acc[tickerId] = {
-        tickerId,
-        units: 0,
-        price: 0,
-        '24h_change': 0,
-        total: 0,
-        averageCost: 0,
-        plDollars: 0,
-        plPercentage: 0,
-        txs: [],
-      };
-    }
-    const asset = acc[tickerId];
-    asset.units += tx.quantity;
-    asset.txs.push(tx);
-    return acc;
-  }, {} as Record<string, AssetPosition & { txs: Tx[] }>);
-};
+// export const groupByTicker = (
+//   txs: Tx[]
+// ): Record<string, AssetPosition & { txs: Tx[] }> => {
+//   return txs.reduce((acc, tx) => {
+//     const tickerId = tx.tickerId.toLocaleUpperCase();
+//     if (!acc[tickerId]) {
+//       acc[tickerId] = {
+//         tickerId,
+//         units: 0,
+//         price: 0,
+//         '24h_change': 0,
+//         total: 0,
+//         averageCost: 0,
+//         plDollars: 0,
+//         plPercentage: 0,
+//         txs: [],
+//       };
+//     }
+//     const asset = acc[tickerId];
+//     asset.units += tx.quantity;
+//     asset.txs.push(tx);
+//     return acc;
+//   }, {} as Record<string, AssetPosition & { txs: Tx[] }>);
+// };
 
 export const addMarketDatas = async <T>(
-  assetPositions: (T & AssetPosition)[],
+  assetPositions: AssetPosition[],
   {
     _coinsService,
-    _db,
     refresh = false,
   }: {
     _coinsService: CoinsService;
-    _db: DBService;
     refresh?: boolean;
   }
 ) => {
@@ -74,17 +68,19 @@ export const addMarketDatas = async <T>(
     coinTickerIds[index] = 'bitcoin';
   }
   const marketData = await _coinsService.getDataMarket(coinTickerIds, refresh);
+  console.log('marketData', marketData);
   for (const asset of assetPositions) {
+    // const initialInverstmentWorth = asset.averageCost * asset.units;
     const assetMarketData = marketData?.find(
       (market: { symbol: string }) =>
         market.symbol.toLocaleLowerCase() === asset.tickerId.toLocaleLowerCase()
     );
     if (assetMarketData) {
-      asset.price = assetMarketData.current_price;
+      asset.currentPrice = assetMarketData.current_price;
       asset['24h_change'] = assetMarketData.price_change_percentage_24h;
-      asset.total = asset.price * asset.units;
-      asset.averageCost = await new AveragePipe(_db).transform(asset);
-      asset.plDollars = await new PLPipe(_db).transform(asset);
+      asset.totalValueUSD = asset.currentPrice! * asset.units;
+      // asset.averageCost = await new AveragePipe(_db).transform(asset);
+      // asset.plDollars = await new PLPipe(_db).transform(asset);
       asset.logo = assetMarketData.image;
       asset.sparkline7d = assetMarketData.sparkline_in_7d;
       asset['1h_change'] =
@@ -98,32 +94,34 @@ export const addMarketDatas = async <T>(
       asset.fdv = assetMarketData.fully_diluted_valuation;
       asset.maxSupply = assetMarketData.max_supply;
       asset.totalSupply = assetMarketData.total_supply;
-
-      const initialInverstmentWorth = asset.averageCost * asset.units;
-      asset.plPercentage = new CalculPercentPipe().transform(
-        asset.plDollars,
-        initialInverstmentWorth
-      );
+      asset.plDollars = asset.totalValueUSD - asset.initialInvestedAmountUSD;
+      asset.plPercentage =
+        (asset.plDollars / asset.initialInvestedAmountUSD) * 100;
+      asset.averageCost = asset.initialInvestedAmountUSD / (asset.units || 1);
+      // asset.plPercentage = new CalculPercentPipe().transform(
+      //   asset.plDollars,
+      //   initialInverstmentWorth
+      // );
     }
   }
   return assetPositions;
 };
 
 export const getTotalWalletWorth = (assetPositions: AssetPosition[]) => {
-  return assetPositions.reduce((acc, asset) => acc + asset.total, 0);
+  return assetPositions.reduce((acc, asset) => acc + asset.totalValueUSD!, 0);
 };
 
 export const getTotalStableWorth = (assetPositions: AssetPosition[]) => {
   const stalbe = assetPositions.filter(
     (asset) =>
-      asset.tickerId === 'USDT' ||
-      asset.tickerId === 'USDC' ||
-      asset.tickerId === 'DAI' ||
-      asset.tickerId === 'TUSD' ||
-      asset.tickerId === 'BUSD' ||
-      asset.tickerId === 'GO'
+      asset.tickerId.toLocaleUpperCase() === 'USDT' ||
+      asset.tickerId.toLocaleUpperCase() === 'USDC' ||
+      asset.tickerId.toLocaleUpperCase() === 'DAI' ||
+      asset.tickerId.toLocaleUpperCase() === 'TUSD' ||
+      asset.tickerId.toLocaleUpperCase() === 'BUSD' ||
+      asset.tickerId.toLocaleUpperCase() === 'GO'
   );
-  return stalbe.reduce((acc, asset) => acc + asset.total, 0);
+  return stalbe.reduce((acc, asset) => acc + asset.totalValueUSD!, 0);
 };
 
 export const getTotaltPL = (assetPositions: AssetPosition[]) => {

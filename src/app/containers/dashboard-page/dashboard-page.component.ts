@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { Auth, authState, signOut, User } from '@angular/fire/auth';
 import { RouterOutlet } from '@angular/router';
-import { DBService } from '../../services/db/db.service';
 import {
   IonApp,
   IonButton,
@@ -66,16 +65,13 @@ import {
 import { TxDetailListComponent } from '../../components/tx-detail-list/tx-detail-list.component';
 import { TotalPositionPipe } from '../../pipes/total-position/total-position.pipe';
 import { CoinsService } from '../../services/coins/coins.service';
-import { AveragePipe } from '../../pipes/average/average.pipe';
 import { TotalPercentPipe } from '../../pipes/total-percent/total-percent.pipe';
-import { PLPipe } from '../../pipes/pl/pl.pipe';
 import { CalculPercentPipe } from '../../pipes/calcul-percent/calcul-percent.pipe';
 import {
   addMarketDatas,
   getTotalStableWorth,
   getTotaltPL,
   getTotalWalletWorth,
-  groupByTicker,
   isStableTicker,
 } from '../../app.utils';
 import {
@@ -88,10 +84,10 @@ import {
 } from 'ionicons/icons';
 import { addIcons } from 'ionicons';
 import { Chart2Component } from '../../components/chart2/chart2.component';
-import { InitialInvestPipe } from '../../pipes/initial-invest/initial-invest.pipe';
 import { TotalWorthGraphService } from '../../services/total-worth-graph/total-worth-graph.service';
 import { ChartComponent } from '../../components/chart/chart.component';
 import { register } from 'swiper/element/bundle';
+import { APIService } from '../../services/api.service';
 
 const UIElements = [
   IonApp,
@@ -138,11 +134,8 @@ register();
     CommonModule,
     ReactiveFormsModule,
     TotalPositionPipe,
-    AveragePipe,
     TotalPercentPipe,
-    PLPipe,
     CalculPercentPipe,
-    InitialInvestPipe,
     Chart2Component,
     ChartComponent,
   ],
@@ -165,10 +158,10 @@ export class DashboardPageComponent {
       txs: Tx[];
     } & AssetPosition)[]
   >;
-  public readonly userWallets$: Observable<UserWallet[]>;
+  public readonly userWallets$: Observable<UserWallet[] | null>;
   public readonly selectedWallet$: BehaviorSubject<UserWallet | undefined> =
     new BehaviorSubject(undefined as any);
-  public readonly defiProtocols$: Observable<any[]>;
+  public readonly defiProtocols$: Observable<any[] | null>;
   public readonly userConfig$;
   public readonly portfolioGraphData$: Observable<number[]>;
 
@@ -273,7 +266,8 @@ export class DashboardPageComponent {
 
   constructor(
     private readonly _auth: Auth,
-    private readonly _db: DBService,
+    // private readonly _db: DBService,
+    private readonly _apiService: APIService,
     private readonly _modalCtrl: ModalController,
     private readonly _coinsService: CoinsService,
     private readonly _toastCtrl: ToastController,
@@ -290,19 +284,19 @@ export class DashboardPageComponent {
 
     // connect user Observable
     this.user$ = authState(this._auth);
-    this.userConfig$ = this._db.userConfig$;
+    this.userConfig$ = this._apiService.userConfig$;
     // build userWallets Observable using
     // `_walletFilterValue$` to filter the wallets
 
     this.userWallets$ = combineLatest([
-      this._db.userWallets$,
+      this._apiService.userWallets$,
       this._walletFilterValue$.asObservable(),
     ]).pipe(
       map(([wallets, filterBy]) =>
         // filter wallets by name if filterBy is set
         // and has more than 2 characters
         // otherwise return all wallets
-        filterBy && filterBy.length > 2
+        wallets && filterBy && filterBy.length > 2
           ? wallets.filter((wallet) =>
               wallet.name
                 .toLocaleLowerCase()
@@ -314,14 +308,14 @@ export class DashboardPageComponent {
     );
 
     this.defiProtocols$ = combineLatest([
-      this._db.defiProtocols$,
+      this._apiService.defiProtocols$,
       this._defiFilterValue$.asObservable(),
     ]).pipe(
       map(([defiProtocols, filterBy]) =>
         // filter defiProtocols by name if filterBy is set
         // and has more than 2 characters
         // otherwise return all defiProtocols
-        filterBy && filterBy.length > 2
+        defiProtocols && filterBy && filterBy.length > 2
           ? defiProtocols.filter((defiProtocol) =>
               defiProtocol.name
                 .toLocaleLowerCase()
@@ -337,7 +331,7 @@ export class DashboardPageComponent {
     // and total pl dollars and total pl percentage
     // and sort by total position worth
     this.assetPositions$ = combineLatest([
-      this._db.txs$,
+      this._apiService.groupedAssets$,
       this.refresh$.asObservable().pipe(
         distinctUntilChanged(),
         pairwise(),
@@ -347,33 +341,28 @@ export class DashboardPageComponent {
       ),
       this.selectedWallet$.asObservable(),
     ]).pipe(
-      filter(([txs]) => !!txs),
+      filter(([assets]) => !!assets),
       // filter by selected wallet
-      map(([txs, refresh, selectedWallet]) => {
+      map(([assets, refresh, selectedWallet]) => {
         return {
-          txs:
+          assets:
             selectedWallet?.id !== undefined
-              ? txs.filter((tx) => tx.walletId === selectedWallet.id)
-              : txs,
+              ? assets?.filter(
+                  (asset) => asset.walletId === selectedWallet.id
+                ) || null
+              : assets,
           refresh,
         };
       }),
-      // group txs by ticker id and sum the quantity
-      map(({ txs, refresh }) => ({
-        assetPositions: groupByTicker(txs),
-        refresh,
-      })),
-      // convert object to array
-      map(({ assetPositions, refresh }) => ({
-        assetPositions: Object.values(assetPositions),
+      map(({ assets, refresh }) => ({
+        assetPositions: assets,
         refresh,
       })),
       // get the current price and 24h change; calculate total, average cost, pl dollars and pl percentage
       switchMap(async ({ assetPositions, refresh }) =>
-        assetPositions.length > 0
+        assetPositions && assetPositions.length > 0
           ? await addMarketDatas(assetPositions, {
               _coinsService,
-              _db,
               refresh,
             }).then((result) => {
               if (refresh === true) {
@@ -383,9 +372,15 @@ export class DashboardPageComponent {
             })
           : []
       ),
-      // sort by total
+      // exclude 0 total
       map((assetPositions) =>
-        [...assetPositions].sort((a, b) => b.total - a.total)
+        assetPositions?.filter(
+          (asset: AssetPosition) => asset.totalValueUSD || 0 > 0
+        )
+      ),
+      // sort by total value USD
+      map((assetPositions) =>
+        [...assetPositions].sort((a, b) => b.totalValueUSD! - a.totalValueUSD!)
       ),
       // calculate total wallet worth and total stale worth and other values
       tap(
@@ -402,10 +397,6 @@ export class DashboardPageComponent {
         assetPositions.length > 0
           ? assetPositions
           : (undefined as unknown as AssetPosition[])
-      ),
-      // exclude 0 total
-      map((assetPositions) =>
-        assetPositions?.filter((asset: AssetPosition) => asset.total > 0)
       ),
       shareReplay()
     ) as Observable<({ txs: Tx[] } & AssetPosition)[]>; // cast to the correct type
@@ -427,13 +418,13 @@ export class DashboardPageComponent {
               const index = acc.labels.indexOf(ticker || 'Stable');
               if (index === -1) {
                 acc.labels.push(ticker || 'Stable');
-                acc.datasets.push(curr.total);
+                acc.datasets.push(curr.totalValueUSD!);
               } else {
-                acc.datasets[index] += curr.total;
+                acc.datasets[index] += curr.totalValueUSD!;
               }
             } else {
               acc.labels.push(curr.tickerId);
-              acc.datasets.push(curr.total);
+              acc.datasets.push(curr.totalValueUSD!);
             }
             return acc;
           },
@@ -473,13 +464,13 @@ export class DashboardPageComponent {
               // check market cap and add to the correct label
               switch (true) {
                 case (c.marketCap ?? 0) < 250000000:
-                  p.datasets[0] += c.total ?? 0;
+                  p.datasets[0] += c.totalValueUSD ?? 0;
                   break;
                 case (c.marketCap ?? 0) < 1000000000:
-                  p.datasets[1] += c.total ?? 0;
+                  p.datasets[1] += c.totalValueUSD ?? 0;
                   break;
                 case (c.marketCap ?? 0) >= 1000000000:
-                  p.datasets[2] += c.total ?? 0;
+                  p.datasets[2] += c.totalValueUSD ?? 0;
                   break;
               }
               return p;
@@ -549,7 +540,6 @@ export class DashboardPageComponent {
       uid: user.uid,
       total,
     };
-    console.log({ tx });
     const ionAlert = await new AlertController().create({
       header: 'Confirm Transaction',
       message: `${quantity}x ${tickerId} at ${price} with ${fees} fees for a total of ${total}`,
@@ -570,7 +560,7 @@ export class DashboardPageComponent {
       button.disabled = false;
       return;
     }
-    await this._db.addTx(tx).catch((err) => {
+    await this._apiService.addTx(tx).catch((err) => {
       button.disabled = false;
       throw err;
     });
@@ -597,8 +587,6 @@ export class DashboardPageComponent {
   }
 
   async searchTicker(search: string) {
-    console.log(search);
-
     if (search.length < 2) {
       this.filteredTickers = [];
     }
@@ -629,20 +617,16 @@ export class DashboardPageComponent {
       // )
       // add limit
       .slice(0, 40);
-    console.log(filteredCoins);
     this.filteredTickers = filteredCoins;
   }
 
   async searchNetwork(search: string) {
-    console.log(search);
     if (search.length < 2) {
       this.networks = [];
     }
-    const txs = (await firstValueFrom(this._db.txs$)) ?? [];
+    const txs = (await firstValueFrom(this._apiService.assets$)) ?? [];
     const networksFromTxs = txs.map((tx) => tx.networkId);
     const networks = await this._coinsService.getChainIdList(networksFromTxs);
-    console.log(networks);
-
     const filteredNetworks = networks
       .filter((network: { name: string }) =>
         network.name.toLocaleLowerCase().includes(search.toLocaleLowerCase())
@@ -653,7 +637,6 @@ export class DashboardPageComponent {
   }
 
   async searchWallet(search: string) {
-    console.log(search);
     if (search.length < 2) {
       this._walletFilterValue$.next(undefined);
       return;
@@ -662,7 +645,6 @@ export class DashboardPageComponent {
   }
 
   async searchDefi(search: string) {
-    console.log(search);
     if (search.length < 2) {
       this._defiFilterValue$.next(undefined);
       return;
@@ -717,11 +699,9 @@ export class DashboardPageComponent {
   }
 
   async backup() {
-    console.log('backup');
-    const txs = (await firstValueFrom(this._db.txs$)) ?? [];
+    const txs = (await firstValueFrom(this._apiService.assets$)) ?? [];
     const userWallets = (await firstValueFrom(this.userWallets$)) ?? [];
-    const defiProtocols = (await firstValueFrom(this._db.defiProtocols$)) ?? [];
-    console.log(txs, userWallets, defiProtocols);
+    const defiProtocols = (await firstValueFrom(this.defiProtocols$)) ?? [];
 
     const data = {
       txs,
@@ -753,13 +733,13 @@ export class DashboardPageComponent {
       return;
     }
     if (ops.type === 'wallet') {
-      await this._db.addWallet({
+      await this._apiService.addWallet({
         name: payload,
         uid,
       });
     }
     if (ops.type === 'defiProtocol') {
-      await this._db.addDefiProtocols({
+      await this._apiService.addDefiProtocols({
         name: payload,
         uid,
       });
@@ -768,7 +748,6 @@ export class DashboardPageComponent {
 
   async updateUserConfig() {
     const userConfig = await firstValueFrom(this.userConfig$);
-    console.log('updateUserConfig', userConfig);
     const ionAlert = await new AlertController().create({
       header: 'Coingecko API Key',
       message: 'Manage your Coingecko API Key',
@@ -814,7 +793,7 @@ export class DashboardPageComponent {
     if (!currentUser) {
       return false;
     }
-    await this._db.updateUserConfig(currentUser.uid, {
+    await this._apiService.updateUserConfig(currentUser.uid, {
       coingeckoApiKey: data.values.apiKey,
     });
     return true;

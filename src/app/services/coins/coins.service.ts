@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { combineLatest, firstValueFrom, map, Observable } from 'rxjs';
-import { DBService } from '../db/db.service';
 import { Auth, getAuth } from '@angular/fire/auth';
+import { APIService } from '../api.service';
 
 @Injectable({
   providedIn: 'root',
@@ -10,7 +10,7 @@ import { Auth, getAuth } from '@angular/fire/auth';
 export class CoinsService {
   constructor(
     private readonly _http: HttpClient,
-    private readonly _db: DBService,
+    private readonly _api: APIService,
     private _auth: Auth
   ) {}
 
@@ -46,7 +46,7 @@ export class CoinsService {
     if (!currentUser) {
       return [];
     }
-    const userConfig = await firstValueFrom(this._db.userConfig$);
+    const userConfig = await firstValueFrom(this._api.userConfig$);
     if (!userConfig?.coingeckoApiKey) {
       return [];
     }

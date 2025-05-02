@@ -25,19 +25,15 @@
     <ion-row>
       <ion-col size-xs="12" size-md="6" class="ion-padding-vertical">
         <ion-label color="medium">
-          <h2 class="ion-margin-start" >Wallet Data</h2>
+          <h2 class="ion-margin-start">Wallet Data</h2>
         </ion-label>
         <ion-card>
           <ion-card-content>
             <ion-item>
-              <ion-label>
-                Net worth
-              </ion-label>
+              <ion-label> Net worth </ion-label>
               <ion-text slot="end" class="ion-text-end">
                 {{
-                  asset
-                    | totalPosition
-                    | currency : "USD" : "symbol" : "1.2-2"
+                  asset | totalPosition | currency : "USD" : "symbol" : "1.2-2"
                 }}
               </ion-text>
             </ion-item>
@@ -45,30 +41,34 @@
             <ion-item>
               <ion-label>Quantity</ion-label>
               <ion-text slot="end" class="ion-text-end">
-                {{ (asset['units']||0) | number : "1.2-5" }}
+                {{ asset["units"] || 0 | number : "1.2-5" }}
               </ion-text>
             </ion-item>
             <ion-item *ngIf="asset['averageCost']">
               <ion-label>Av.Cost</ion-label>
               <ion-text slot="end" class="ion-text-end">
-                {{ asset['averageCost']| currency : "USD" : "symbol" : "1.2-2" }}
+                {{
+                  asset["averageCost"] | currency : "USD" : "symbol" : "1.2-2"
+                }}
               </ion-text>
             </ion-item>
-            <ion-item *ngIf="asset['txs'].length > 0">
+            <ion-item *ngIf="asset.initialInvestedAmountUSD > 0">
               <ion-label>Initial Investment</ion-label>
               <ion-text slot="end" class="ion-text-end">
-                {{ asset | initialInvest | currency : "USD" : "symbol" : "1.2-2"}}
+                {{
+                  asset.initialInvestedAmountUSD
+                    | currency : "USD" : "symbol" : "1.2-2"
+                }}
               </ion-text>
             </ion-item>
             <ion-item *ngIf="asset['plDollars']">
               <ion-label>PL</ion-label>
-              <ion-note slot="end" class="ion-text-end" [color]="
-                  (asset.plDollars || 0) >= 0 ? 'success' : 'danger'
-                "
+              <ion-note
+                slot="end"
+                class="ion-text-end"
+                [color]="(asset.plDollars || 0) >= 0 ? 'success' : 'danger'"
               >
-                {{
-                  asset.plDollars
-                    | currency : "USD" : "symbol" : "1.2-2"
+                {{ asset.plDollars | currency : "USD" : "symbol" : "1.2-2"
                 }}<br />
                 <small>
                   {{ asset.plPercentage | number : "1.2-2" || 0 }}%
@@ -78,7 +78,7 @@
           </ion-card-content>
         </ion-card>
       </ion-col>
-      <ion-col size-xs="12" size-md="6" class="ion-padding-vertical"> 
+      <ion-col size-xs="12" size-md="6" class="ion-padding-vertical">
         <ion-label color="medium">
           <h2>Market changes</h2>
         </ion-label>
@@ -86,26 +86,38 @@
           <ion-card-content>
             <ion-item *ngIf="asset['1h_change']">
               <ion-label>1h</ion-label>
-              <ion-note slot="end" [color]="asset['1h_change'] > 0 ? 'success' : 'danger'">
-                {{ asset['1h_change'] | number : "1.2-2" }}%
+              <ion-note
+                slot="end"
+                [color]="asset['1h_change'] > 0 ? 'success' : 'danger'"
+              >
+                {{ asset["1h_change"] | number : "1.2-2" }}%
               </ion-note>
             </ion-item>
             <ion-item *ngIf="asset['24h_change']">
               <ion-label>24h</ion-label>
-              <ion-note slot="end" [color]="asset['24h_change'] > 0 ? 'success' : 'danger'">
-                {{ asset['24h_change'] | number : "1.2-2" }}%
+              <ion-note
+                slot="end"
+                [color]="asset['24h_change'] > 0 ? 'success' : 'danger'"
+              >
+                {{ asset["24h_change"] | number : "1.2-2" }}%
               </ion-note>
             </ion-item>
             <ion-item *ngIf="asset['7d_change']">
               <ion-label>7d</ion-label>
-              <ion-note slot="end" [color]="asset['7d_change'] > 0 ? 'success' : 'danger'">
-                {{ asset['7d_change'] | number : "1.2-2" }}%
+              <ion-note
+                slot="end"
+                [color]="asset['7d_change'] > 0 ? 'success' : 'danger'"
+              >
+                {{ asset["7d_change"] | number : "1.2-2" }}%
               </ion-note>
             </ion-item>
             <ion-item *ngIf="asset['30d_change']">
               <ion-label>30d</ion-label>
-              <ion-note slot="end" [color]="asset['30d_change'] > 0 ? 'success' : 'danger'">
-                {{ asset['30d_change'] | number : "1.2-2" }}%
+              <ion-note
+                slot="end"
+                [color]="asset['30d_change'] > 0 ? 'success' : 'danger'"
+              >
+                {{ asset["30d_change"] | number : "1.2-2" }}%
               </ion-note>
             </ion-item>
           </ion-card-content>
@@ -113,41 +125,40 @@
       </ion-col>
       <ion-col size-xs="12" size-md="6" class="ion-padding-vertical">
         <ion-label color="medium">
-          <h2 class="ion-margin-start" >Market Data</h2>
+          <h2 class="ion-margin-start">Market Data</h2>
         </ion-label>
         <ion-card>
           <ion-card-content>
             <ion-item>
               <ion-label>Total Market Cap.</ion-label>
               <ion-text slot="end" class="ion-text-end">
-                {{ (asset['marketCap']||0) | currency : "USD" }}
+                {{ asset["marketCap"] || 0 | currency : "USD" }}
               </ion-text>
             </ion-item>
             <ion-item *ngIf="asset['circulatingSupply']">
               <ion-label>Circulating supply</ion-label>
               <ion-text slot="end" class="ion-text-end">
-                {{ asset['circulatingSupply'] | currency : "USD" }}
+                {{ asset["circulatingSupply"] | currency : "USD" }}
               </ion-text>
             </ion-item>
             <ion-item *ngIf="asset['maxSupply']">
               <ion-label>Max supply</ion-label>
               <ion-text slot="end" class="ion-text-end">
-                {{ asset['maxSupply'] | currency : "USD"  }}
+                {{ asset["maxSupply"] | currency : "USD" }}
               </ion-text>
             </ion-item>
             <ion-item *ngIf="asset['fdv']">
               <ion-label>FDV</ion-label>
               <ion-text slot="end" class="ion-text-end">
-                {{ asset['fdv'] | currency : "USD" }}
+                {{ asset["fdv"] | currency : "USD" }}
               </ion-text>
             </ion-item>
-
           </ion-card-content>
         </ion-card>
       </ion-col>
     </ion-row>
-    
-    <ng-container *ngIf="txsLocation$ | async as entities">
+
+    <ng-container *ngIf="assetsLocation$ | async as entities">
       <ion-row>
         <ion-col class="ion-padding-vertical">
           <ion-label color="medium">
@@ -155,22 +166,26 @@
           </ion-label>
           <ion-card>
             <ion-card-content>
-              <ion-grid *ngFor="let group of entities| keyvalue">
+              <ion-grid *ngFor="let group of entities | keyvalue">
                 <ion-row *ngFor="let value of group.value">
                   <ion-col size="2">
                     {{ value.tickerId }}
                   </ion-col>
                   <ion-col size="2">
-                    {{ value.quantity | number : "1.2-5" }}
+                    {{ value.units | number : "1.2-5" }}
                   </ion-col>
                   <ion-col size="3">
-                    {{ value.networkId|toChainName|async }}
+                    {{ value.networkId | toChainName | async }}
                   </ion-col>
                   <ion-col size="2">
                     {{ value.walletId }}
                   </ion-col>
                   <ion-col size="3">
-                    {{ value.defiProtocolId ? (value.defiProtocolId|toDefiProtocolName|async) : ''}}
+                    {{
+                      value.defiProtocolId
+                        ? (value.defiProtocolId | toDefiProtocolName | async)
+                        : ""
+                    }}
                   </ion-col>
                 </ion-row>
               </ion-grid>
@@ -188,7 +203,7 @@
         <ion-card>
           <ion-card-content>
             <ion-list>
-              <ion-item *ngFor="let tx of txs$ | async | filterByTicker : asset.tickerId">
+              <ion-item *ngFor="let tx of txs$ | async">
                 <ion-label>
                   <h2>
                     {{ tx.tickerId }} 

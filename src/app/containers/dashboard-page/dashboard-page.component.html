@@ -391,10 +391,10 @@
                         <ion-row class="ion-align-items-center">
                           <ion-col size="2">
                             <ion-label>
-                              <h2>{{ asset.tickerId }}</h2>
+                              <h2>{{ asset.tickerId | uppercase }}</h2>
                               <p>
                                 {{
-                                  asset.price
+                                  asset.currentPrice ?? 0 
                                     | currency : "USD" : "symbol" : "1.2-2"
                                 }}
                               </p>
@@ -403,10 +403,10 @@
                           <ion-col size="2" class="ion-text-end">
                             <ion-text
                               [color]="
-                                asset['24h_change'] >= 0 ? 'success' : 'danger'
+                                (asset['24h_change'] || 0) >= 0 ? 'success' : 'danger'
                               "
                             >
-                              {{ asset["24h_change"] | number : "1.2-2" }}%
+                              {{ (asset['24h_change'] || 0) | number : "1.2-2" }}%
                             </ion-text>
                           </ion-col>
                           <ion-col size="2" class="ion-text-end">
@@ -424,8 +424,7 @@
                           </ion-col>
                           <ion-col size="2" class="ion-text-end">
                             {{
-                              asset
-                                | initialInvest
+                              asset.initialInvestedAmountUSD
                                 | currency : "USD" : "symbol" : "1.2-2"
                             }}
                             <br />
@@ -445,7 +444,7 @@
                               "
                             >
                               {{
-                                asset.plDollars
+                                (asset.plDollars || 0)
                                   | currency : "USD" : "symbol" : "1.2-2"
                               }}<br />
                               <small>
@@ -472,11 +471,11 @@
                           <ion-col>
                             <ion-label>
                               <h2>
-                                <b>{{ asset.tickerId }}</b>
+                                <b>{{ asset.tickerId | uppercase }}</b>
                                 <small class="ion-padding-start">
                                   <ion-text
                                     [color]="
-                                      asset['24h_change'] >= 0
+                                      asset['24h_change'] || 0 >= 0
                                         ? 'success'
                                         : 'danger'
                                     "
@@ -489,7 +488,7 @@
                               </h2>
                               <p>
                                 {{
-                                  asset.price
+                                  asset.currentPrice ?? 0
                                     | currency : "USD" : "symbol" : "1.2-2"
                                 }}
                               </p>

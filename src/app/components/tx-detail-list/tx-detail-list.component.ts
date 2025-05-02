@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import {
   AlertController,
   IonButton,
@@ -26,8 +26,7 @@ import {
   ToastController,
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
-import { map, Observable } from 'rxjs';
-import { DBService } from '../../services/db/db.service';
+import { BehaviorSubject, firstValueFrom, map } from 'rxjs';
 import { AssetPosition, Tx } from '../../interfaces';
 import { FilterByTickerPipe } from '../../pipes/filter-by-ticker/filter-by-ticker.pipe';
 import { close, trashOutline } from 'ionicons/icons';
@@ -35,8 +34,8 @@ import { addIcons } from 'ionicons';
 import { ToChainNamePipe } from '../../pipes/to-chain-name/to-chain-name.pipe';
 import { ToDefiProtocolNamePipe } from '../../pipes/to-defiprotocol-name/to-defi-protocol-name.pipe';
 import { ChartComponent } from '../chart/chart.component';
-import { InitialInvestPipe } from '../../pipes/initial-invest/initial-invest.pipe';
 import { TotalPositionPipe } from '../../pipes/total-position/total-position.pipe';
+import { APIService } from '../../services/api.service';
 
 const UIElements = [
   IonHeader,
@@ -73,19 +72,19 @@ const UIElements = [
     FilterByTickerPipe,
     ToChainNamePipe,
     ToDefiProtocolNamePipe,
-    InitialInvestPipe,
     ChartComponent,
     TotalPositionPipe,
   ],
 })
-export class TxDetailListComponent {
+export class TxDetailListComponent implements OnInit {
   public selectedSegment: 'history' | 'location' = 'history';
-  @Input() asset!: AssetPosition & { txs: Tx[] };
-  public readonly txs$: Observable<Tx[]>;
-  public readonly txsLocation$;
+  @Input() asset!: AssetPosition;
+  public readonly assetsLocation$;
+  private readonly _txs$ = new BehaviorSubject<Tx[]>([]);
+  public readonly txs$ = this._txs$.asObservable();
 
   constructor(
-    private readonly _db: DBService,
+    private readonly _api: APIService,
     private readonly _alertCtrl: AlertController,
     private readonly _toastCtrl: ToastController,
     public readonly modalCtrl: ModalController
@@ -94,60 +93,65 @@ export class TxDetailListComponent {
       close,
       trashOutline,
     });
-    this.txs$ = this._db.txs$;
-    this.txsLocation$ = this._db.txs$.pipe(
-      map((txs) =>
-        txs.filter(
-          (tx) =>
-            tx.tickerId.toLocaleUpperCase() ===
+    this.assetsLocation$ = this._api.assets$.pipe(
+      map((assets) =>
+        assets?.filter(
+          (asset) =>
+            asset.tickerId.toLocaleUpperCase() ===
             this.asset.tickerId.toLocaleUpperCase()
         )
       ),
       // group tx by network and defiProtocolIds
-      map((txs) => {
-        return txs.reduce(
-          (acc, tx) => {
-            const key = `${tx.networkId}`;
+      map((assets) => {
+        return assets?.reduce(
+          (acc, asset) => {
+            const key = `${asset.networkId}-${
+              asset.defiProtocolId || 'no_defi'
+            }-${asset.walletId}`;
             if (!acc[key]) {
-              acc[key] = [
-                {
-                  ...tx,
-                  tickerId: tx.tickerId.toLocaleUpperCase(),
-                },
-              ];
+              acc[key] = [asset];
             } else {
               const quantity = acc[key].find(
                 (item) =>
-                  (tx.defiProtocolId
-                    ? item.defiProtocolId === tx.defiProtocolId
+                  (asset.defiProtocolId
+                    ? item.defiProtocolId === asset.defiProtocolId
                     : true) &&
                   item.tickerId.toLocaleUpperCase() ===
-                    tx.tickerId.toLocaleUpperCase()
+                    asset.tickerId.toLocaleUpperCase() &&
+                  item.networkId === asset.networkId &&
+                  item.walletId === asset.walletId
               );
               if (quantity) {
-                quantity.quantity += tx.quantity;
+                quantity.units += asset.units;
               } else {
-                acc[key].push({
-                  ...tx,
-                  tickerId: tx.tickerId.toLocaleUpperCase(),
-                });
+                acc[key].push(asset);
               }
             }
             return acc;
           },
           {} as {
-            [key: string]: Tx[];
+            [key: string]: AssetPosition[];
           }
         );
       }),
       map((txs) => {
         // loop to remove item with quantity >= 0
         for (const key in txs) {
-          txs[key] = txs[key].filter((tx) => tx.quantity > 0);
+          txs[key] = txs[key].filter((tx) => tx.units > 0);
         }
         return txs;
       })
     );
+  }
+
+  async ngOnInit() {
+    const txs = await firstValueFrom(this._api.getTxs$(this.asset.tickerId));
+    console.log('txs', txs);
+
+    if (!txs) {
+      return;
+    }
+    this._txs$.next(txs);
   }
 
   segmentChanged($event: CustomEvent) {
@@ -174,7 +178,16 @@ export class TxDetailListComponent {
     if (role !== 'ok') {
       return;
     }
-    await this._db.delete(txId);
+    await this._api.deleteTx(txId);
+    const txs = await firstValueFrom(this._api.getTxs$(this.asset.tickerId));
+    console.log('txs', txs);
+    this._txs$.next(txs || []);
+    const asset = await firstValueFrom(
+      this._api.groupedAssets$.pipe(
+        map((assets) => assets?.find((asset) => asset.id === this.asset.id))
+      )
+    );
+    this.asset = asset || this.asset;
     // Show toast
     const toast = await this._toastCtrl.create({
       message: 'Transaction deleted',
