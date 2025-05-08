@@ -393,7 +393,7 @@
                         <ion-row class="ion-align-items-center">
                           <ion-col size="2">
                             <ion-label>
-                              <h2>{{ asset.tickerId | uppercase }}</h2>
+                              <h2 class="font-weight-bold">{{ asset.tickerId | uppercase }}</h2>
                               <p>
                                 {{
                                   asset.currentPrice ?? 0
@@ -476,7 +476,7 @@
                           <ion-col>
                             <ion-label>
                               <h2>
-                                <b>{{ asset.tickerId | uppercase }}</b>
+                                <span class="font-weight-bold">{{ asset.tickerId | uppercase }}</span>
                                 <small class="ion-padding-start">
                                   <ion-text
                                     [color]="
