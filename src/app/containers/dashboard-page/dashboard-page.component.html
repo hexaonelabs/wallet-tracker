@@ -387,6 +387,8 @@
                           alt="{{ asset.tickerId }}"
                         />
                       </ion-avatar>
+                      
+                      <!-- DESKTOP UI -->
                       <ion-grid class="ion-hide-md-down">
                         <ion-row class="ion-align-items-center">
                           <ion-col size="2">
@@ -394,7 +396,7 @@
                               <h2>{{ asset.tickerId | uppercase }}</h2>
                               <p>
                                 {{
-                                  asset.currentPrice ?? 0 
+                                  asset.currentPrice ?? 0
                                     | currency : "USD" : "symbol" : "1.2-2"
                                 }}
                               </p>
@@ -403,10 +405,12 @@
                           <ion-col size="2" class="ion-text-end">
                             <ion-text
                               [color]="
-                                (asset['24h_change'] || 0) >= 0 ? 'success' : 'danger'
+                                (asset['24h_change'] || 0) >= 0
+                                  ? 'success'
+                                  : 'danger'
                               "
                             >
-                              {{ (asset['24h_change'] || 0) | number : "1.2-2" }}%
+                              {{ asset["24h_change"] || 0 | number : "1.2-2" }}%
                             </ion-text>
                           </ion-col>
                           <ion-col size="2" class="ion-text-end">
@@ -444,7 +448,7 @@
                               "
                             >
                               {{
-                                (asset.plDollars || 0)
+                                asset.plDollars || 0
                                   | currency : "USD" : "symbol" : "1.2-2"
                               }}<br />
                               <small>
@@ -466,6 +470,7 @@
                         </ion-row>
                       </ion-grid>
 
+                      <!-- MOBILE UI -->
                       <ion-grid class="ion-hide-md-up">
                         <ion-row class="ion-align-items-center">
                           <ion-col>
@@ -475,7 +480,7 @@
                                 <small class="ion-padding-start">
                                   <ion-text
                                     [color]="
-                                      asset['24h_change'] || 0 >= 0
+                                      (asset['24h_change'] || 0) >= 0
                                         ? 'success'
                                         : 'danger'
                                     "
